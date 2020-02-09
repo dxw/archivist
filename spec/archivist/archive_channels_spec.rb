@@ -171,6 +171,10 @@ describe Archivist::ArchiveChannels do
     end
   end
 
+  before :each do
+    subject.flush_cache
+  end
+
   describe ".run with default rules" do
     let(:use_default_rules) { true }
 

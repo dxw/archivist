@@ -1,6 +1,8 @@
 module Archivist
   class ArchiveChannels
     class << self
+      extend Memoist
+
       def run
         all = all_channels
         not_monitored_channels = not_monitored(all)
@@ -40,14 +42,17 @@ module Archivist
       def monitored(channels)
         channels.select { |channel| monitored?(channel) }
       end
+      memoize :monitored
 
       def not_monitored(channels)
         channels - monitored(channels)
       end
+      memoize :not_monitored
 
       def monitored?(channel)
         !not_monitored?(channel)
       end
+      memoize :monitored?
 
       def not_monitored?(channel)
         return true unless Config.use_default_rules
@@ -58,6 +63,7 @@ module Archivist
           channel.purpose&.value&.include?(Config.no_archive_label) ||
           channel.topic&.value&.include?(Config.no_archive_label)
       end
+      memoize :not_monitored?
 
       def leave_channels(channels)
         channels.each do |channel|
@@ -89,6 +95,7 @@ module Archivist
       def archivable?(channel)
         has_no_recent_real_messages?(channel)
       end
+      memoize :archivable?
 
       def has_recent_real_messages?(channel, days_ago: 30)
         Config.slack_client.conversations_history(

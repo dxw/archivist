@@ -1,3 +1,4 @@
+require "memoist"
 require "slack-ruby-client"
 
 require "archivist/config"

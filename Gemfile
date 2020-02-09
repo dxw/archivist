@@ -1,6 +1,7 @@
 source "https://rubygems.org"
 
 gem "dotenv"
+gem "memoist"
 gem "slack-ruby-client"
 
 group :development, :test do
