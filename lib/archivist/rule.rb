@@ -7,5 +7,9 @@ module Archivist
 
       @days = days unless days.nil? || days.zero?
     end
+
+    def overlap?(rule)
+      rule.prefix.start_with?(prefix) || prefix.start_with?(rule.prefix)
+    end
   end
 end
