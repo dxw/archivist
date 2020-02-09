@@ -31,7 +31,8 @@ module Archivist
 
             Rule.new(
               arguments.fetch("prefix"),
-              days: arguments.fetch("days", "").to_i
+              days: arguments.fetch("days", "").to_i,
+              skip: arguments.fetch("skip", "false") == "true"
             )
           }
 

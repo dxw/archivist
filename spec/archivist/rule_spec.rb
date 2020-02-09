@@ -2,7 +2,7 @@ describe Archivist::Config do
   let(:prefix) { "prefix-" }
   let(:days) { 123 }
 
-  subject { Archivist::Rule.new(prefix, days: days) }
+  subject { Archivist::Rule.new(prefix, days: days, skip: false) }
 
   describe "#match?" do
     it "returns true when the channel's name starts with the prefix" do

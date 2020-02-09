@@ -62,12 +62,12 @@ module Archivist
           channel.purpose&.value&.include?(Config.no_archive_label) ||
           channel.topic&.value&.include?(Config.no_archive_label)
 
-        if Config.use_default_rules
-          never_monitored
-        else
-          rules_apply = Config.rules.any? { |rule| rule.match?(channel) }
+        rule = Config.rules.detect { |rule| rule.match?(channel) }
 
-          never_monitored || !rules_apply
+        if Config.use_default_rules
+          never_monitored || rule&.skip
+        else
+          never_monitored || rule.nil? || rule.skip
         end
       end
       memoize :not_monitored?

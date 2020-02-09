@@ -1,11 +1,12 @@
 module Archivist
   class Rule
-    attr_reader :prefix, :days
+    attr_reader :prefix, :days, :skip
 
-    def initialize(prefix, days: nil)
+    def initialize(prefix, days: nil, skip: nil)
       @prefix = prefix
 
       @days = days unless days.nil? || days.zero?
+      @skip = skip.nil? ? false : skip
     end
 
     def match?(channel)

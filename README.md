@@ -60,6 +60,14 @@ The available arguments are:
 
   The minimum number of days a channel must be inactive before being archived.
 
+- `skip` (boolean)
+
+  Whether or not to skip all channels with the given prefix. This is useful when
+  channels should be monitored by default, but some subset of them should be
+  excluded.
+
+  `skip` overrides all other arguments.
+
 #### Create rule exceptions
 
 To create an exception to the rules and prevent a channel from being archived by

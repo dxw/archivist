@@ -32,7 +32,7 @@ describe Archivist::Config do
 
     it "parses additional rules from the environment" do
       old_rules = ENV["ARCHIVIST_RULES"]
-      ENV["ARCHIVIST_RULES"] = "prefix=chat- , days = 90;\n prefix=test-"
+      ENV["ARCHIVIST_RULES"] = "prefix=chat- , days = 90;\n prefix=test- , skip=true"
 
       subject.configure
 
@@ -42,9 +42,11 @@ describe Archivist::Config do
 
       expect(subject.rules[0].prefix).to eq("chat-")
       expect(subject.rules[0].days).to eq(90)
+      expect(subject.rules[0].skip).to eq(false)
 
       expect(subject.rules[1].prefix).to eq("test-")
       expect(subject.rules[1].days).to be_nil
+      expect(subject.rules[1].skip).to eq(true)
     end
 
     it "raises an error if any rules overlap" do

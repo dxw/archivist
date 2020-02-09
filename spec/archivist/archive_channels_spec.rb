@@ -7,6 +7,7 @@ describe Archivist::ArchiveChannels do
   let(:rules) {
     [
       Archivist::Rule.new("stale-", days: 123),
+      Archivist::Rule.new("skip-", skip: true),
     ]
   }
 
@@ -68,6 +69,12 @@ describe Archivist::ArchiveChannels do
       )
     )
   }
+  let(:skip_channel) {
+    Slack::Messages::Message.new(
+      id: "skip-test-id",
+      name: "skip-test",
+    )
+  }
 
   let(:conversations_list_responses) {
     [
@@ -85,6 +92,7 @@ describe Archivist::ArchiveChannels do
           pending_shared_channel,
           no_archive_description_channel,
           no_archive_topic_channel,
+          skip_channel,
         ]
       ),
     ]
@@ -238,6 +246,14 @@ describe Archivist::ArchiveChannels do
       subject.run
     end
 
+    it "doesn't join channels marked as skip by a matching rule" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: skip_channel.id)
+
+      subject.run
+    end
+
     it "uses activity from the last 30 days when deciding whether a channel not covered by any rules is stale" do
       expect(slack_client)
         .to receive(:conversations_history)
@@ -315,6 +331,14 @@ describe Archivist::ArchiveChannels do
       expect(slack_client)
         .not_to receive(:conversations_join)
         .with(channel: active_channel.id)
+
+      subject.run
+    end
+
+    it "doesn't join channels marked as skip by a matching rule" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: skip_channel.id)
 
       subject.run
     end
