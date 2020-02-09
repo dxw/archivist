@@ -100,14 +100,16 @@ module Archivist
       end
 
       def archivable?(channel)
-        has_no_recent_real_messages?(channel)
+        rule = Config.rules.detect { |rule| rule.match?(channel) }
+
+        has_no_recent_real_messages?(channel, days_ago: rule&.days)
       end
       memoize :archivable?
 
-      def has_recent_real_messages?(channel, days_ago: 30)
+      def has_recent_real_messages?(channel, days_ago: nil)
         Config.slack_client.conversations_history(
           channel: channel.id,
-          oldest: Date.today - days_ago
+          oldest: Date.today - (days_ago || 30)
         ) do |response|
           real_messages = response.messages.reject { |message|
             message.hidden || IGNORED_MESSAGE_TYPES.include?(message.subtype)
@@ -119,8 +121,8 @@ module Archivist
         false
       end
 
-      def has_no_recent_real_messages?(channel)
-        !has_recent_real_messages?(channel)
+      def has_no_recent_real_messages?(channel, days_ago: nil)
+        !has_recent_real_messages?(channel, days_ago: days_ago)
       end
     end
   end

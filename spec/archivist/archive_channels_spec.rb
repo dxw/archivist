@@ -6,7 +6,7 @@ describe Archivist::ArchiveChannels do
   let(:use_default_rules) { true }
   let(:rules) {
     [
-      Archivist::Rule.new("stale-"),
+      Archivist::Rule.new("stale-", days: 123),
     ]
   }
 
@@ -234,6 +234,28 @@ describe Archivist::ArchiveChannels do
       expect(slack_client)
         .not_to receive(:conversations_join)
         .with(channel: no_archive_topic_channel.id)
+
+      subject.run
+    end
+
+    it "uses activity from the last 30 days when deciding whether a channel not covered by any rules is stale" do
+      expect(slack_client)
+        .to receive(:conversations_history)
+        .with(
+          channel: active_channel.id,
+          oldest: Date.today - 30
+        )
+
+      subject.run
+    end
+
+    it "uses activity from the date range specified by the rule when deciding whether a channel covered by a rules is stale" do
+      expect(slack_client)
+        .to receive(:conversations_history)
+        .with(
+          channel: stale_channel.id,
+          oldest: Date.today - rules[0].days
+        )
 
       subject.run
     end
