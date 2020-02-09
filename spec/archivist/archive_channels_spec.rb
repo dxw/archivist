@@ -8,14 +8,12 @@ describe Archivist::ArchiveChannels do
     Slack::Messages::Message.new(
       id: "active-test-id",
       name: "active-test",
-      pending_shared: []
     )
   }
   let(:stale_channel) {
     Slack::Messages::Message.new(
       id: "stale-test-id",
       name: "stale-test",
-      pending_shared: []
     )
   }
   let(:member_channel) {
@@ -23,7 +21,6 @@ describe Archivist::ArchiveChannels do
       id: "member-test-id",
       name: "member-test",
       is_member: true,
-      pending_shared: []
     )
   }
   let(:general_channel) {
@@ -31,7 +28,6 @@ describe Archivist::ArchiveChannels do
       id: "general-test-id",
       name: "general-test",
       is_general: true,
-      pending_shared: []
     )
   }
   let(:shared_channel) {
@@ -39,7 +35,6 @@ describe Archivist::ArchiveChannels do
       id: "shared-test-id",
       name: "shared-test",
       is_shared: true,
-      pending_shared: []
     )
   }
   let(:pending_shared_channel) {
@@ -55,8 +50,7 @@ describe Archivist::ArchiveChannels do
       name: "no-archive-description-test",
       purpose: Slack::Messages::Message.new(
         value: "A #{no_archive_label} description!"
-      ),
-      pending_shared: []
+      )
     )
   }
   let(:no_archive_topic_channel) {
@@ -65,8 +59,7 @@ describe Archivist::ArchiveChannels do
       name: "no-archive-topic-test",
       topic: Slack::Messages::Message.new(
         value: "A #{no_archive_label} topic!"
-      ),
-      pending_shared: []
+      )
     )
   }
 
