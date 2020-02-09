@@ -11,47 +11,53 @@ describe Archivist::ArchiveChannels do
 
   describe ".run" do
     before do
-      conversation_list_response = Slack::Messages::Message.new(
-        channels: [
-          Slack::Messages::Message.new(
-            id: "test-a-id",
-            name: "test-a",
-            pending_shared: []
-          ),
-          Slack::Messages::Message.new(
-            id: "test-b-id",
-            name: "test-b",
-            pending_shared: []
-          ),
-          Slack::Messages::Message.new(
-            id: "member-test-id",
-            name: "member-test",
-            is_member: true,
-            pending_shared: []
-          ),
-          Slack::Messages::Message.new(
-            id: "general-test-id",
-            name: "general-test",
-            is_general: true,
-            pending_shared: []
-          ),
-          Slack::Messages::Message.new(
-            id: "shared-test-id",
-            name: "shared-test",
-            is_shared: true,
-            pending_shared: []
-          ),
-          Slack::Messages::Message.new(
-            id: "pending-shared-test-id",
-            name: "pending-shared-test",
-            pending_shared: ["other-team"]
-          ),
-        ]
-      )
+      conversations_list_responses = [
+        Slack::Messages::Message.new(
+          channels: [
+            Slack::Messages::Message.new(
+              id: "test-a-id",
+              name: "test-a",
+              pending_shared: []
+            ),
+            Slack::Messages::Message.new(
+              id: "test-b-id",
+              name: "test-b",
+              pending_shared: []
+            ),
+            Slack::Messages::Message.new(
+              id: "member-test-id",
+              name: "member-test",
+              is_member: true,
+              pending_shared: []
+            ),
+          ]
+        ),
+        Slack::Messages::Message.new(
+          channels: [
+            Slack::Messages::Message.new(
+              id: "general-test-id",
+              name: "general-test",
+              is_general: true,
+              pending_shared: []
+            ),
+            Slack::Messages::Message.new(
+              id: "shared-test-id",
+              name: "shared-test",
+              is_shared: true,
+              pending_shared: []
+            ),
+            Slack::Messages::Message.new(
+              id: "pending-shared-test-id",
+              name: "pending-shared-test",
+              pending_shared: ["other-team"]
+            ),
+          ]
+        ),
+      ]
 
-      allow(slack_client)
-        .to receive(:conversations_list)
-        .and_return(conversation_list_response)
+      allow(slack_client).to receive(:conversations_list) do |&block|
+        conversations_list_responses.each { |response| block.call(response) }
+      end
     end
 
     it "joins channels it's not already a member of" do

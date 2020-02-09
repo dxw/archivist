@@ -9,22 +9,29 @@ module Archivist
 
       private
 
-      def disposable_channels(limit: 999)
-        all_channels(limit: limit).reject { |channel|
+      def disposable_channels
+        all_channels.reject { |channel|
           channel.is_general ||
             channel.is_shared ||
             channel.pending_shared.any?
         }
       end
 
-      def all_channels(limit: 999)
-        response = Config.slack_client.conversations_list(
-          exclude_archived: true,
-          limit: limit,
-          types: "public_channel"
-        )
+      def all_channels
+        channels = []
 
-        response.channels
+        Config.slack_client.conversations_list(
+          # API parameters
+          exclude_archived: true,
+          types: "public_channel",
+
+          # Client configuration
+          sleep_interval: 2
+        ) do |response|
+          channels.concat(response.channels)
+        end
+
+        channels
       end
 
       def join_new_channels(channels)
