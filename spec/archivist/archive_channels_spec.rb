@@ -29,6 +29,17 @@ describe Archivist::ArchiveChannels do
             is_member: true,
             pending_shared: []
           ),
+          Slack::Messages::Message.new(
+            id: "shared-test-id",
+            name: "shared-test",
+            is_shared: true,
+            pending_shared: []
+          ),
+          Slack::Messages::Message.new(
+            id: "pending-shared-test-id",
+            name: "pending-shared-test",
+            pending_shared: ["other-team"]
+          ),
         ]
       )
 
@@ -37,7 +48,7 @@ describe Archivist::ArchiveChannels do
         .and_return(conversation_list_response)
     end
 
-    it "joins all channels it's not already a member of" do
+    it "joins channels it's not already a member of" do
       expect(slack_client)
         .to receive(:conversations_join)
         .with(channel: "test-a-id")
@@ -45,9 +56,24 @@ describe Archivist::ArchiveChannels do
         .to receive(:conversations_join)
         .with(channel: "test-b-id")
 
+      subject.run
+    end
+
+    it "doesn't join channels it's already a member of" do
       expect(slack_client)
         .not_to receive(:conversations_join)
         .with(channel: "member-test-id")
+
+      subject.run
+    end
+
+    it "doesn't join shared or pending shared channels" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: "shared-test-id")
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: "pending-shared-test-id")
 
       subject.run
     end

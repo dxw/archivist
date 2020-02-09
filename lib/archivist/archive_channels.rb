@@ -2,10 +2,18 @@ module Archivist
   class ArchiveChannels
     class << self
       def run
-        join_new_channels(all_channels)
+        channels = unshared_channels
+
+        join_new_channels(channels)
       end
 
       private
+
+      def unshared_channels(limit: 999)
+        all_channels(limit: limit).reject { |channel|
+          channel.is_shared || channel.pending_shared.any?
+        }
+      end
 
       def all_channels(limit: 999)
         response = Config.slack_client.conversations_list(
