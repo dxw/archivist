@@ -157,6 +157,7 @@ describe Archivist::ArchiveChannels do
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
     end
+    allow(slack_client).to receive(:conversations_leave)
     allow(slack_client).to receive(:conversations_join)
     allow(slack_client).to receive(:conversations_history) do |params, &block|
       case params.fetch(:channel)
@@ -279,6 +280,14 @@ describe Archivist::ArchiveChannels do
     it "doesn't archive any channels" do
       # TODO: Replace this with a check of the Slack client method instead.
       expect(subject).not_to receive(:archive_channel)
+
+      subject.run
+    end
+
+    it "leaves any channels of which it's a member" do
+      expect(slack_client)
+        .to receive(:conversations_leave)
+        .with(channel: member_channel.id)
 
       subject.run
     end

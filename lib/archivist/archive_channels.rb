@@ -3,8 +3,10 @@ module Archivist
     class << self
       def run
         all = all_channels
+        ignored_channels = ignored(all)
         disposable_channels = disposable(all)
 
+        leave_channels(ignored_channels)
         join_new_channels(disposable_channels)
         archive_channels(disposable_channels)
       end
@@ -35,6 +37,10 @@ module Archivist
         channels
       end
 
+      def ignored(channels)
+        channels.select { |channel| ignore?(channel) }
+      end
+
       def disposable(channels)
         channels.reject { |channel| ignore?(channel) }
       end
@@ -47,6 +53,14 @@ module Archivist
           channel.pending_shared&.any? ||
           channel.purpose&.value&.include?(Config.no_archive_label) ||
           channel.topic&.value&.include?(Config.no_archive_label)
+      end
+
+      def leave_channels(channels)
+        channels.each do |channel|
+          next unless channel.is_member
+
+          Config.slack_client.conversations_leave(channel: channel.id)
+        end
       end
 
       def join_new_channels(channels)
