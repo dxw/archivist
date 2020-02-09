@@ -38,6 +38,28 @@ notifications about users joining or leaving the channel.
 If you want to disable the default rules, making archiving opt in, set the
 `ARCHIVIST_DISABLE_DEFAULTS` environment variable to any value.
 
+#### Create rules
+
+To create additional rules, set the `ARCHIVIST_RULES` environment variable to a
+semicolon (`;`) separated list of rules.
+
+Rules, in turn, are a comma-separated list of key-value pairs. For example,
+`prefix=chat-,days=90` means "Wait at least 90 days before archiving inactive
+channels with names starting with `#chat-`".
+
+All whitespace is ignored.
+
+The available arguments are:
+
+- `prefix` (string - **required**)
+
+  The channel name prefix this rule applies to. If more than one rule could
+  apply to the same channel, an exception will be raised.
+
+- `days` (integer)
+
+  The minimum number of days a channel must be inactive before being archived.
+
 #### Create rule exceptions
 
 To create an exception to the rules and prevent a channel from being archived by

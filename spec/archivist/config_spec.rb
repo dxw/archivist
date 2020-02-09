@@ -29,5 +29,22 @@ describe Archivist::Config do
 
       expect(subject.use_default_rules).to be(false)
     end
+
+    it "parses additional rules from the environment" do
+      old_rules = ENV["ARCHIVIST_RULES"]
+      ENV["ARCHIVIST_RULES"] = "prefix=chat- , days = 90;\n prefix=test-"
+
+      subject.configure
+
+      ENV["ARCHIVIST_RULES"] = old_rules
+
+      expect(subject.rules.count).to eq(2)
+
+      expect(subject.rules[0].prefix).to eq("chat-")
+      expect(subject.rules[0].days).to eq(90)
+
+      expect(subject.rules[1].prefix).to eq("test-")
+      expect(subject.rules[1].days).to be_nil
+    end
   end
 end
