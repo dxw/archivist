@@ -17,10 +17,10 @@ module Archivist
       def parse_rules(rule_definitions)
         return [] if rule_definitions.nil?
 
-        rule_definitions
+        rules = rule_definitions
           .split(";")
           .map(&:strip)
-          .map do |rule_definition|
+          .map { |rule_definition|
             arguments = rule_definition
               .split(",")
               .map(&:strip)
@@ -31,7 +31,17 @@ module Archivist
               arguments.fetch("prefix"),
               days: arguments.fetch("days", "").to_i
             )
-          end
+          }
+
+        overlapping_rules = rules.select { |rule|
+          rules.any? { |r| r != rule && rule.overlap?(r) }
+        }
+
+        if overlapping_rules.any?
+          raise "The following rules overlap: #{overlapping_rules.map(&:prefix).join(", ")}"
+        end
+
+        rules
       end
     end
   end

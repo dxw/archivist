@@ -46,5 +46,14 @@ describe Archivist::Config do
       expect(subject.rules[1].prefix).to eq("test-")
       expect(subject.rules[1].days).to be_nil
     end
+
+    it "raises an error if any rules overlap" do
+      old_rules = ENV["ARCHIVIST_RULES"]
+      ENV["ARCHIVIST_RULES"] = "prefix=chat-;prefix=cha;prefix=test-"
+
+      expect { subject.configure }.to raise_error("The following rules overlap: chat-, cha")
+
+      ENV["ARCHIVIST_RULES"] = old_rules
+    end
   end
 end
