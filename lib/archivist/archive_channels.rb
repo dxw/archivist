@@ -3,12 +3,12 @@ module Archivist
     class << self
       def run
         all = all_channels
-        ignored_channels = ignored(all)
-        disposable_channels = disposable(all)
+        not_monitored_channels = not_monitored(all)
+        monitored_channels = monitored(all)
 
-        leave_channels(ignored_channels)
-        join_new_channels(disposable_channels)
-        archive_channels(disposable_channels)
+        leave_channels(not_monitored_channels)
+        join_new_channels(monitored_channels)
+        archive_channels(monitored_channels)
       end
 
       private
@@ -37,15 +37,19 @@ module Archivist
         channels
       end
 
-      def ignored(channels)
-        channels.select { |channel| ignore?(channel) }
+      def monitored(channels)
+        channels.select { |channel| monitored?(channel) }
       end
 
-      def disposable(channels)
-        channels.reject { |channel| ignore?(channel) }
+      def not_monitored(channels)
+        channels - monitored(channels)
       end
 
-      def ignore?(channel)
+      def monitored?(channel)
+        !not_monitored?(channel)
+      end
+
+      def not_monitored?(channel)
         return true unless Config.use_default_rules
 
         channel.is_general ||
@@ -73,7 +77,7 @@ module Archivist
 
       def archive_channels(channels)
         channels
-          .select { |channel| archive?(channel) }
+          .select { |channel| archivable?(channel) }
           .each { |channel| archive_channel(channel) }
       end
 
@@ -82,7 +86,7 @@ module Archivist
         puts "Archiving ##{channel.name}"
       end
 
-      def archive?(channel)
+      def archivable?(channel)
         has_no_recent_real_messages?(channel)
       end
 
