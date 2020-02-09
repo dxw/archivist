@@ -8,6 +8,10 @@ module Archivist
 
         self
       end
+
+      def no_archive_label
+        ENV.fetch("NO_ARCHIVE_LABEL", nil)
+      end
     end
   end
 end

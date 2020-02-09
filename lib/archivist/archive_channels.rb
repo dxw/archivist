@@ -42,7 +42,9 @@ module Archivist
       def ignore?(channel)
         channel.is_general ||
           channel.is_shared ||
-          channel.pending_shared.any?
+          channel.pending_shared&.any? ||
+          channel.purpose&.value&.include?(Config.no_archive_label) ||
+          channel.topic&.value&.include?(Config.no_archive_label)
       end
 
       def join_new_channels(channels)

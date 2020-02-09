@@ -2,6 +2,7 @@ describe Archivist::ArchiveChannels do
   subject { Archivist::ArchiveChannels }
 
   let(:slack_client) { double(Slack::Web::Client) }
+  let(:no_archive_label) { "%noarchive" }
 
   let(:active_channel) {
     Slack::Messages::Message.new(
@@ -48,6 +49,26 @@ describe Archivist::ArchiveChannels do
       pending_shared: ["other-team"]
     )
   }
+  let(:no_archive_description_channel) {
+    Slack::Messages::Message.new(
+      id: "no-archive-description-test-id",
+      name: "no-archive-description-test",
+      purpose: Slack::Messages::Message.new(
+        value: "A #{no_archive_label} description!"
+      ),
+      pending_shared: []
+    )
+  }
+  let(:no_archive_topic_channel) {
+    Slack::Messages::Message.new(
+      id: "no-archive-topic-test-id",
+      name: "no-archive-topic-test",
+      topic: Slack::Messages::Message.new(
+        value: "A #{no_archive_label} topic!"
+      ),
+      pending_shared: []
+    )
+  }
 
   let(:conversations_list_responses) {
     [
@@ -56,13 +77,15 @@ describe Archivist::ArchiveChannels do
           active_channel,
           stale_channel,
           member_channel,
+          general_channel,
         ]
       ),
       Slack::Messages::Message.new(
         channels: [
-          general_channel,
           shared_channel,
           pending_shared_channel,
+          no_archive_description_channel,
+          no_archive_topic_channel,
         ]
       ),
     ]
@@ -132,6 +155,7 @@ describe Archivist::ArchiveChannels do
     Archivist::Config.configure(slack_token: "testtoken")
 
     allow(Archivist::Config).to receive(:slack_client) { slack_client }
+    allow(Archivist::Config).to receive(:no_archive_label) { no_archive_label }
 
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
@@ -184,6 +208,22 @@ describe Archivist::ArchiveChannels do
       expect(slack_client)
         .not_to receive(:conversations_join)
         .with(channel: pending_shared_channel.id)
+
+      subject.run
+    end
+
+    it "doesn't join channels with the no archive label in their description" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: no_archive_description_channel.id)
+
+      subject.run
+    end
+
+    it "doesn't join channels with the no archive label in their topic" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: no_archive_topic_channel.id)
 
       subject.run
     end
