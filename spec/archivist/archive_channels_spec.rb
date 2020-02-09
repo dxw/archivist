@@ -4,6 +4,11 @@ describe Archivist::ArchiveChannels do
   let(:slack_client) { double(Slack::Web::Client) }
   let(:no_archive_label) { "%noarchive" }
   let(:use_default_rules) { true }
+  let(:rules) {
+    [
+      Archivist::Rule.new("stale-"),
+    ]
+  }
 
   let(:active_channel) {
     Slack::Messages::Message.new(
@@ -153,6 +158,7 @@ describe Archivist::ArchiveChannels do
     allow(Archivist::Config).to receive(:use_default_rules) {
       use_default_rules
     }
+    allow(Archivist::Config).to receive(:rules) { rules }
 
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
@@ -275,20 +281,41 @@ describe Archivist::ArchiveChannels do
   describe ".run without default rules" do
     let(:use_default_rules) { false }
 
-    it "doesn't join any channels" do
-      expect(slack_client).not_to receive(:conversations_join)
+    it "joins channels covered by the rules" do
+      expect(slack_client)
+        .to receive(:conversations_join)
+        .with(channel: stale_channel.id)
 
       subject.run
     end
 
-    it "doesn't archive any channels" do
+    it "doesn't join channels not covered by the rules" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: active_channel.id)
+
+      subject.run
+    end
+
+    it "archives stale channels covered by the rules" do
       # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject).not_to receive(:archive_channel)
+      expect(subject)
+        .to receive(:archive_channel)
+        .with(stale_channel)
 
       subject.run
     end
 
-    it "leaves any channels of which it's a member" do
+    it "doesn't archive any channels not covered by the rules" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(active_channel)
+
+      subject.run
+    end
+
+    it "leaves any channels not covered by the rules" do
       expect(slack_client)
         .to receive(:conversations_leave)
         .with(channel: member_channel.id)

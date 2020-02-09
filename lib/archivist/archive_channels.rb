@@ -55,13 +55,20 @@ module Archivist
       memoize :monitored?
 
       def not_monitored?(channel)
-        return true unless Config.use_default_rules
-
-        channel.is_general ||
+        never_monitored =
+          channel.is_general ||
           channel.is_shared ||
           channel.pending_shared&.any? ||
           channel.purpose&.value&.include?(Config.no_archive_label) ||
           channel.topic&.value&.include?(Config.no_archive_label)
+
+        if Config.use_default_rules
+          never_monitored
+        else
+          rules_apply = Config.rules.any? { |rule| rule.match?(channel) }
+
+          never_monitored || !rules_apply
+        end
       end
       memoize :not_monitored?
 
