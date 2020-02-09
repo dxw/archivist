@@ -2,10 +2,11 @@ module Archivist
   class ArchiveChannels
     class << self
       def run
-        channels = disposable_channels
+        all = all_channels
+        disposable_channels = disposable(all)
 
-        join_new_channels(channels)
-        archive_channels(channels)
+        join_new_channels(disposable_channels)
+        archive_channels(disposable_channels)
       end
 
       private
@@ -16,14 +17,6 @@ module Archivist
         channel_leave
         message_deleted
       ].freeze
-
-      def disposable_channels
-        all_channels.reject { |channel|
-          channel.is_general ||
-            channel.is_shared ||
-            channel.pending_shared.any?
-        }
-      end
 
       def all_channels
         channels = []
@@ -40,6 +33,16 @@ module Archivist
         end
 
         channels
+      end
+
+      def disposable(channels)
+        channels.reject { |channel| ignore?(channel) }
+      end
+
+      def ignore?(channel)
+        channel.is_general ||
+          channel.is_shared ||
+          channel.pending_shared.any?
       end
 
       def join_new_channels(channels)
