@@ -5,6 +5,7 @@ module Archivist
         channels = disposable_channels
 
         join_new_channels(channels)
+        archive_channels(channels)
       end
 
       private
@@ -40,6 +41,15 @@ module Archivist
 
           Config.slack_client.conversations_join(channel: channel.id)
         end
+      end
+
+      def archive_channels(channels)
+        channels.each { |channel| archive_channel(channel) }
+      end
+
+      # TODO: Actually do the archiving!
+      def archive_channel(channel)
+        puts "Archiving ##{channel.name}"
       end
     end
   end

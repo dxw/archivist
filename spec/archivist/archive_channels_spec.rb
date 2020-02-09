@@ -76,6 +76,7 @@ describe Archivist::ArchiveChannels do
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
     end
+    allow(slack_client).to receive(:conversations_join)
   end
 
   describe ".run" do
@@ -114,6 +115,22 @@ describe Archivist::ArchiveChannels do
         .not_to receive(:conversations_join)
         .with(channel: pending_shared_channel.id)
 
+      subject.run
+    end
+
+    skip "archives stale channels" do
+      subject.run
+    end
+
+    skip "doesn't archive active channels" do
+      subject.run
+    end
+
+    skip "doesn't archive the general channel" do
+      subject.run
+    end
+
+    skip "doesn't archive shared or pending shared channels" do
       subject.run
     end
   end
