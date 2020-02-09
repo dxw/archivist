@@ -24,7 +24,21 @@ Inspired by
 
 ## Configure
 
-### Create rule exceptions
+### Rules
+
+#### Default rules
+
+By default, all channels are archived after 30 days without a "real" message or
+channel action. In this case "real" messages or chat actions are messages
+visible to anyone in the channel that weren't sent by a bot user, except for
+notifications about users joining or leaving the channel.
+
+##### Disable defaults
+
+If you want to disable the default rules, making archiving opt in, set the
+`ARCHIVIST_DISABLE_DEFAULTS` environment variable to any value.
+
+#### Create rule exceptions
 
 To create an exception to the rules and prevent a channel from being archived by
 the bot under any circumstances, you can specify a magic string via the

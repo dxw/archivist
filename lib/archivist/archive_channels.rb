@@ -40,6 +40,8 @@ module Archivist
       end
 
       def ignore?(channel)
+        return true unless Config.use_default_rules
+
         channel.is_general ||
           channel.is_shared ||
           channel.pending_shared&.any? ||

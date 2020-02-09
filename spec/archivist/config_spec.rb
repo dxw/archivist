@@ -18,5 +18,16 @@ describe Archivist::Config do
 
       expect(subject.no_archive_label).to eq("%test")
     end
+
+    it "sets whether to use the default rules based on the environment" do
+      old_disable = ENV["ARCHIVIST_DISABLE_DEFAULTS"]
+      ENV["ARCHIVIST_DISABLE_DEFAULTS"] = "anything"
+
+      subject.configure
+
+      ENV["ARCHIVIST_DISABLE_DEFAULTS"] = old_disable
+
+      expect(subject.use_default_rules).to be(false)
+    end
   end
 end

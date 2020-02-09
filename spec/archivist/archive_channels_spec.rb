@@ -3,6 +3,7 @@ describe Archivist::ArchiveChannels do
 
   let(:slack_client) { double(Slack::Web::Client) }
   let(:no_archive_label) { "%noarchive" }
+  let(:use_default_rules) { true }
 
   let(:active_channel) {
     Slack::Messages::Message.new(
@@ -149,6 +150,9 @@ describe Archivist::ArchiveChannels do
 
     allow(Archivist::Config).to receive(:slack_client) { slack_client }
     allow(Archivist::Config).to receive(:no_archive_label) { no_archive_label }
+    allow(Archivist::Config).to receive(:use_default_rules) {
+      use_default_rules
+    }
 
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
@@ -166,7 +170,9 @@ describe Archivist::ArchiveChannels do
     end
   end
 
-  describe ".run" do
+  describe ".run with default rules" do
+    let(:use_default_rules) { true }
+
     it "joins channels it's not already a member of" do
       expect(slack_client)
         .to receive(:conversations_join)
@@ -256,6 +262,23 @@ describe Archivist::ArchiveChannels do
       expect(subject)
         .not_to receive(:archive_channel)
         .with(pending_shared_channel)
+
+      subject.run
+    end
+  end
+
+  describe ".run without default rules" do
+    let(:use_default_rules) { false }
+
+    it "doesn't join any channels" do
+      expect(slack_client).not_to receive(:conversations_join)
+
+      subject.run
+    end
+
+    it "doesn't archive any channels" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject).not_to receive(:archive_channel)
 
       subject.run
     end
