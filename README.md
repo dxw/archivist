@@ -15,6 +15,7 @@ Inspired by
 
    - `channels:read`
    - `channels:join`
+   - `channels:history`
 
 1. Add the environment variables from `.env.example` to the GitHub repository
    secrets, filling in any missing values from the Slack app.

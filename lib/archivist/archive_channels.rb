@@ -10,6 +10,13 @@ module Archivist
 
       private
 
+      IGNORED_MESSAGE_TYPES = %w[
+        bot_message
+        channel_join
+        channel_leave
+        message_deleted
+      ].freeze
+
       def disposable_channels
         all_channels.reject { |channel|
           channel.is_general ||
@@ -44,12 +51,37 @@ module Archivist
       end
 
       def archive_channels(channels)
-        channels.each { |channel| archive_channel(channel) }
+        channels
+          .select { |channel| archive?(channel) }
+          .each { |channel| archive_channel(channel) }
       end
 
       # TODO: Actually do the archiving!
       def archive_channel(channel)
         puts "Archiving ##{channel.name}"
+      end
+
+      def archive?(channel)
+        has_no_recent_real_messages?(channel)
+      end
+
+      def has_recent_real_messages?(channel, days_ago: 30)
+        Config.slack_client.conversations_history(
+          channel: channel.id,
+          oldest: Date.today - days_ago
+        ) do |response|
+          real_messages = response.messages.reject { |message|
+            message.hidden || IGNORED_MESSAGE_TYPES.include?(message.subtype)
+          }
+
+          return true if real_messages.any?
+        end
+
+        false
+      end
+
+      def has_no_recent_real_messages?(channel)
+        !has_recent_real_messages?(channel)
       end
     end
   end

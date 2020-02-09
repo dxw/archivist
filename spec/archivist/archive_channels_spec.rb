@@ -67,6 +67,66 @@ describe Archivist::ArchiveChannels do
       ),
     ]
   }
+  let(:active_conversations_history_responses) {
+    [
+      Slack::Messages::Message.new(
+        messages: [
+          Slack::Messages::Message.new(
+            subtype: "channel_join"
+          ),
+          Slack::Messages::Message.new(
+            subtype: "channel_leave"
+          ),
+          Slack::Messages::Message.new,
+          Slack::Messages::Message.new,
+          Slack::Messages::Message.new(
+            subtype: "bot_message"
+          ),
+          Slack::Messages::Message.new,
+          Slack::Messages::Message.new(
+            hidden: true
+          ),
+        ]
+      ),
+      Slack::Messages::Message.new(
+        messages: [
+          Slack::Messages::Message.new(
+            subtype: "bot_message"
+          ),
+        ]
+      ),
+    ]
+  }
+  let(:stale_conversations_history_responses) {
+    [
+      Slack::Messages::Message.new(
+        messages: [
+          Slack::Messages::Message.new(
+            subtype: "channel_join"
+          ),
+          Slack::Messages::Message.new(
+            subtype: "channel_leave"
+          ),
+          Slack::Messages::Message.new(
+            subtype: "bot_message"
+          ),
+          Slack::Messages::Message.new(
+            hidden: true
+          ),
+        ]
+      ),
+      Slack::Messages::Message.new(
+        messages: [
+          Slack::Messages::Message.new(
+            subtype: "bot_message"
+          ),
+          Slack::Messages::Message.new(
+            subtype: "bot_message"
+          ),
+        ]
+      ),
+    ]
+  }
 
   before do
     Archivist::Config.configure(slack_token: "testtoken")
@@ -77,6 +137,16 @@ describe Archivist::ArchiveChannels do
       conversations_list_responses.each { |response| block.call(response) }
     end
     allow(slack_client).to receive(:conversations_join)
+    allow(slack_client).to receive(:conversations_history) do |params, &block|
+      case params.fetch(:channel)
+      when active_channel.id
+        active_conversations_history_responses.each(&block)
+      when stale_channel.id
+        stale_conversations_history_responses.each(&block)
+      else
+        active_conversations_history_responses.each(&block)
+      end
+    end
   end
 
   describe ".run" do
@@ -118,19 +188,42 @@ describe Archivist::ArchiveChannels do
       subject.run
     end
 
-    skip "archives stale channels" do
+    it "archives stale channels" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .to receive(:archive_channel)
+        .with(stale_channel)
+
       subject.run
     end
 
-    skip "doesn't archive active channels" do
+    it "doesn't archive active channels" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(active_channel)
+
       subject.run
     end
 
-    skip "doesn't archive the general channel" do
+    it "doesn't archive the general channel" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(general_channel)
+
       subject.run
     end
 
-    skip "doesn't archive shared or pending shared channels" do
+    it "doesn't archive shared or pending shared channels" do
+      # TODO: Replace these with checks of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(shared_channel)
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(pending_shared_channel)
+
       subject.run
     end
   end
