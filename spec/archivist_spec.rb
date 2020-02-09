@@ -5,7 +5,7 @@ describe Archivist do
     it "runs the configuration" do
       expect(Archivist::Config).to receive(:configure)
 
-      subject.configure(slack_token: "testtoken")
+      subject.configure
     end
   end
 end

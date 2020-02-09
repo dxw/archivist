@@ -145,7 +145,7 @@ describe Archivist::ArchiveChannels do
   }
 
   before do
-    Archivist::Config.configure(slack_token: "testtoken")
+    Archivist::Config.configure
 
     allow(Archivist::Config).to receive(:slack_client) { slack_client }
     allow(Archivist::Config).to receive(:no_archive_label) { no_archive_label }
