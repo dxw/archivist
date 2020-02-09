@@ -3,70 +3,89 @@ describe Archivist::ArchiveChannels do
 
   let(:slack_client) { double(Slack::Web::Client) }
 
+  let(:active_channel) {
+    Slack::Messages::Message.new(
+      id: "active-test-id",
+      name: "active-test",
+      pending_shared: []
+    )
+  }
+  let(:stale_channel) {
+    Slack::Messages::Message.new(
+      id: "stale-test-id",
+      name: "stale-test",
+      pending_shared: []
+    )
+  }
+  let(:member_channel) {
+    Slack::Messages::Message.new(
+      id: "member-test-id",
+      name: "member-test",
+      is_member: true,
+      pending_shared: []
+    )
+  }
+  let(:general_channel) {
+    Slack::Messages::Message.new(
+      id: "general-test-id",
+      name: "general-test",
+      is_general: true,
+      pending_shared: []
+    )
+  }
+  let(:shared_channel) {
+    Slack::Messages::Message.new(
+      id: "shared-test-id",
+      name: "shared-test",
+      is_shared: true,
+      pending_shared: []
+    )
+  }
+  let(:pending_shared_channel) {
+    Slack::Messages::Message.new(
+      id: "pending-shared-test-id",
+      name: "pending-shared-test",
+      pending_shared: ["other-team"]
+    )
+  }
+
+  let(:conversations_list_responses) {
+    [
+      Slack::Messages::Message.new(
+        channels: [
+          active_channel,
+          stale_channel,
+          member_channel,
+        ]
+      ),
+      Slack::Messages::Message.new(
+        channels: [
+          general_channel,
+          shared_channel,
+          pending_shared_channel,
+        ]
+      ),
+    ]
+  }
+
   before do
     Archivist::Config.configure(slack_token: "testtoken")
 
     allow(Archivist::Config).to receive(:slack_client) { slack_client }
+
+    allow(slack_client).to receive(:conversations_list) do |&block|
+      conversations_list_responses.each { |response| block.call(response) }
+    end
   end
 
   describe ".run" do
-    before do
-      conversations_list_responses = [
-        Slack::Messages::Message.new(
-          channels: [
-            Slack::Messages::Message.new(
-              id: "test-a-id",
-              name: "test-a",
-              pending_shared: []
-            ),
-            Slack::Messages::Message.new(
-              id: "test-b-id",
-              name: "test-b",
-              pending_shared: []
-            ),
-            Slack::Messages::Message.new(
-              id: "member-test-id",
-              name: "member-test",
-              is_member: true,
-              pending_shared: []
-            ),
-          ]
-        ),
-        Slack::Messages::Message.new(
-          channels: [
-            Slack::Messages::Message.new(
-              id: "general-test-id",
-              name: "general-test",
-              is_general: true,
-              pending_shared: []
-            ),
-            Slack::Messages::Message.new(
-              id: "shared-test-id",
-              name: "shared-test",
-              is_shared: true,
-              pending_shared: []
-            ),
-            Slack::Messages::Message.new(
-              id: "pending-shared-test-id",
-              name: "pending-shared-test",
-              pending_shared: ["other-team"]
-            ),
-          ]
-        ),
-      ]
-
-      allow(slack_client).to receive(:conversations_list) do |&block|
-        conversations_list_responses.each { |response| block.call(response) }
-      end
-    end
-
     it "joins channels it's not already a member of" do
       expect(slack_client)
         .to receive(:conversations_join)
-        .with(channel: "test-a-id")
+        .with(channel: active_channel.id)
       expect(slack_client)
         .to receive(:conversations_join)
-        .with(channel: "test-b-id")
+        .with(channel: stale_channel.id)
 
       subject.run
     end
@@ -74,7 +93,7 @@ describe Archivist::ArchiveChannels do
     it "doesn't join channels it's already a member of" do
       expect(slack_client)
         .not_to receive(:conversations_join)
-        .with(channel: "member-test-id")
+        .with(channel: member_channel.id)
 
       subject.run
     end
@@ -82,7 +101,7 @@ describe Archivist::ArchiveChannels do
     it "doesn't join the general channel" do
       expect(slack_client)
         .not_to receive(:conversations_join)
-        .with(channel: "general-test-id")
+        .with(channel: general_channel.id)
 
       subject.run
     end
@@ -90,10 +109,10 @@ describe Archivist::ArchiveChannels do
     it "doesn't join shared or pending shared channels" do
       expect(slack_client)
         .not_to receive(:conversations_join)
-        .with(channel: "shared-test-id")
+        .with(channel: shared_channel.id)
       expect(slack_client)
         .not_to receive(:conversations_join)
-        .with(channel: "pending-shared-test-id")
+        .with(channel: pending_shared_channel.id)
 
       subject.run
     end
