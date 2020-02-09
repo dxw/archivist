@@ -4,6 +4,26 @@ describe Archivist::Config do
 
   subject { Archivist::Rule.new(prefix, days: days) }
 
+  describe "#match?" do
+    it "returns true when the channel's name starts with the prefix" do
+      match = subject.match?(Slack::Messages::Message.new(name: "prefix-channel"))
+
+      expect(match).to eq(true)
+    end
+
+    it "returns true when the channel's name is the same as the prefix" do
+      match = subject.match?(Slack::Messages::Message.new(name: "prefix-"))
+
+      expect(match).to eq(true)
+    end
+
+    it "returns false when the channel's name doesn't start with the prefix" do
+      match = subject.match?(Slack::Messages::Message.new(name: "another-channel"))
+
+      expect(match).to eq(false)
+    end
+  end
+
   describe "#overlap?" do
     let(:underlapping_rule) { Archivist::Rule.new("pre") }
     let(:overlapping_rule) { Archivist::Rule.new("prefix-with-more-") }
