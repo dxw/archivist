@@ -30,6 +30,12 @@ describe Archivist::ArchiveChannels do
             pending_shared: []
           ),
           Slack::Messages::Message.new(
+            id: "general-test-id",
+            name: "general-test",
+            is_general: true,
+            pending_shared: []
+          ),
+          Slack::Messages::Message.new(
             id: "shared-test-id",
             name: "shared-test",
             is_shared: true,
@@ -63,6 +69,14 @@ describe Archivist::ArchiveChannels do
       expect(slack_client)
         .not_to receive(:conversations_join)
         .with(channel: "member-test-id")
+
+      subject.run
+    end
+
+    it "doesn't join the general channel" do
+      expect(slack_client)
+        .not_to receive(:conversations_join)
+        .with(channel: "general-test-id")
 
       subject.run
     end

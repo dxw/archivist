@@ -2,16 +2,18 @@ module Archivist
   class ArchiveChannels
     class << self
       def run
-        channels = unshared_channels
+        channels = disposable_channels
 
         join_new_channels(channels)
       end
 
       private
 
-      def unshared_channels(limit: 999)
+      def disposable_channels(limit: 999)
         all_channels(limit: limit).reject { |channel|
-          channel.is_shared || channel.pending_shared.any?
+          channel.is_general ||
+            channel.is_shared ||
+            channel.pending_shared.any?
         }
       end
 
