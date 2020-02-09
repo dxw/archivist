@@ -15,12 +15,12 @@ describe Archivist::Config do
     end
 
     it "returns the no archive label from the environment if one is set" do
-      old_label = ENV["NO_ARCHIVE_LABEL"]
-      ENV["NO_ARCHIVE_LABEL"] = "%test"
+      old_label = ENV["ARCHIVIST_NO_ARCHIVE_LABEL"]
+      ENV["ARCHIVIST_NO_ARCHIVE_LABEL"] = "%test"
 
       expect(subject.no_archive_label).to eq("%test")
 
-      ENV["NO_ARCHIVE_LABEL"] = old_label
+      ENV["ARCHIVIST_NO_ARCHIVE_LABEL"] = old_label
     end
   end
 end

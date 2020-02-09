@@ -21,7 +21,7 @@ task default: %i[spec standard]
 namespace :archivist do
   task configure: :dotenv do
     Archivist.configure(
-      slack_token: ENV["SLACK_API_TOKEN"],
+      slack_token: ENV["ARCHIVIST_SLACK_API_TOKEN"],
     )
   end
 end
