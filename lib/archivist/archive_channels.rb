@@ -2,20 +2,56 @@ module Archivist
   class ArchiveChannels
     extend Memoist
 
-    def run
-      leave_channels(not_monitored_channels)
-      join_new_channels(monitored_channels)
-      archive_channels(monitored_channels)
-    end
-
-    private
-
     IGNORED_MESSAGE_TYPES = %w[
       bot_message
       channel_join
       channel_leave
       message_deleted
     ].freeze
+
+    DEFAULT_ARCHIVABLE_DAYS = 30
+    # This is one day less than the cycle length to allow for fuzziness in
+    # run times.
+    DAYS_AFTER_WARNING_BEFORE_ARCHIVING = 6
+
+    WARNING_BLOCK_ID_PREFIX = "archivist-warn"
+    ARCHIVING_BLOCK_ID_PREFIX = "archivist-archive"
+
+    WARNING_MESSAGE_BLOCKS = [
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: ":warning: *This channel will be archived soon due to lack of activity!* :warning:",
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text:
+            Config.no_archive_label ?
+              "If this is unexpected and unwanted and you want to ask me to ignore it in future, add `#{Config.no_archive_label}` to the channel's description or topic and I will. If it's just too soon, but you don't want me to ignore the channel entirely, continue to use it (send a message) and I'll check again later." :
+              "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later.",
+        },
+      },
+      {
+        type: "section",
+        text: {
+          type: "plain_text",
+          text: "If the rules are wrong or need updating, you might need to modify my configuration. Let my maintainers for your workspace know!",
+        },
+      },
+    ].freeze
+
+    def run
+      leave_channels(not_monitored_channels)
+      join_new_channels(monitored_channels)
+      warn_channels(monitored_channels)
+      archive_channels(monitored_channels)
+    end
+
+    private
 
     def leave_channels(channels)
       channels.each do |channel|
@@ -31,6 +67,22 @@ module Archivist
 
         Config.slack_client.conversations_join(channel: channel.id)
       end
+    end
+
+    def warn_channels(channels)
+      channels
+        .select { |channel| warnable?(channel) }
+        .each { |channel| warn_channel(channel) }
+    end
+
+    def warn_channel(channel)
+      blocks = WARNING_MESSAGE_BLOCKS.dup
+      blocks[0][:block_id] = "#{WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
+
+      Config.slack_client.chat_postMessage(
+        channel: channel.id,
+        blocks: blocks
+      )
     end
 
     def archive_channels(channels)
@@ -95,17 +147,44 @@ module Archivist
     end
     memoize :not_monitored?
 
+    def warnable?(channel)
+      stale?(channel) && not_warned?(channel)
+    end
+    memoize :warnable?
+
     def archivable?(channel)
+      stale?(channel) &&
+        warned?(channel, min_days_ago: DAYS_AFTER_WARNING_BEFORE_ARCHIVING)
+    end
+    memoize :archivable?
+
+    def stale?(channel)
       rule = Config.rules.detect { |rule| rule.match?(channel) }
 
       has_no_recent_real_messages?(channel, max_days_ago: rule&.days)
     end
-    memoize :archivable?
+    memoize :stale?
+
+    def warned?(channel, min_days_ago: nil)
+      rule = Config.rules.detect { |rule| rule.match?(channel) }
+
+      has_warning_message?(
+        channel,
+        min_days_ago: min_days_ago,
+        # We ignore warnings outside of the stale range so that if something
+        # went wrong, we'd warn again eventually.
+        max_days_ago: rule&.days
+      )
+    end
+
+    def not_warned?(channel, min_days_ago: nil)
+      !warned?(channel, min_days_ago: min_days_ago)
+    end
 
     def has_recent_real_messages?(channel, max_days_ago: nil)
       last_messages(
         channel,
-        max_days_ago: max_days_ago || 30
+        max_days_ago: max_days_ago || DEFAULT_ARCHIVABLE_DAYS
       ) do |response|
         real_messages = response.messages.reject { |message|
           message.hidden ||
@@ -123,13 +202,39 @@ module Archivist
       !has_recent_real_messages?(channel, max_days_ago: max_days_ago)
     end
 
-    def last_messages(channel, limit: nil, max_days_ago:, &block)
+    def has_warning_message?(channel, min_days_ago: nil, max_days_ago: nil)
+      last_messages(
+        channel,
+        # We run in small batches as we run this on channels that don't have
+        # recent activity, so we expect the warning message to be very near
+        # the end.
+        limit: 5,
+        min_days_ago: min_days_ago,
+        max_days_ago: max_days_ago
+      ) do |response|
+        warning_message = response.messages.detect { |message|
+          (message.subtype === "bot_message" || message.bot_id) &&
+            message.blocks &&
+            message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
+        }
+
+        next unless warning_message
+
+        message_sent_at = Time.new(warning_message.ts)
+
+        return true if message_sent_at >= Date.today - DEFAULT_ARCHIVABLE_DAYS
+      end
+
+      false
+    end
+
+    def last_messages(channel, limit: nil, min_days_ago: nil, max_days_ago: nil, &block)
       Config.slack_client.conversations_history(
         channel: channel.id,
         limit: limit,
         # Providing `latest` means the history is fetched most recent first.
-        latest: Time.now,
-        oldest: Date.today - max_days_ago,
+        latest: min_days_ago.nil? ? Time.now : (Date.today - min_days_ago),
+        oldest: max_days_ago && Date.today - max_days_ago,
         &block
       )
     end

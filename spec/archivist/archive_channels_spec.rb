@@ -5,6 +5,7 @@ describe Archivist::ArchiveChannels do
   let(:rules) {
     [
       Archivist::Rule.new("stale-", days: 123),
+      Archivist::Rule.new("warned-", days: 123),
       Archivist::Rule.new("skip-", skip: true),
     ]
   }
@@ -19,6 +20,18 @@ describe Archivist::ArchiveChannels do
     Slack::Messages::Message.new(
       id: "stale-test-id",
       name: "stale-test",
+    )
+  }
+  let(:warned_active_channel) {
+    Slack::Messages::Message.new(
+      id: "warned-active-test-id",
+      name: "warned-active-test",
+    )
+  }
+  let(:warned_stale_channel) {
+    Slack::Messages::Message.new(
+      id: "warned-stale-test-id",
+      name: "warned-stale-test",
     )
   }
   let(:member_channel) {
@@ -80,6 +93,8 @@ describe Archivist::ArchiveChannels do
         channels: [
           active_channel,
           stale_channel,
+          warned_active_channel,
+          warned_stale_channel,
           member_channel,
           general_channel,
         ]
@@ -100,26 +115,37 @@ describe Archivist::ArchiveChannels do
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "channel_join"
+            subtype: "channel_join",
+            ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
-            subtype: "channel_leave"
+            subtype: "channel_leave",
+            ts: Time.now.to_f.to_s
           ),
-          Slack::Messages::Message.new,
-          Slack::Messages::Message.new,
           Slack::Messages::Message.new(
-            subtype: "bot_message"
+            ts: Time.now.to_f.to_s
           ),
-          Slack::Messages::Message.new,
           Slack::Messages::Message.new(
-            hidden: true
+            ts: Time.now.to_f.to_s
+          ),
+          Slack::Messages::Message.new(
+            subtype: "bot_message",
+            ts: Time.now.to_f.to_s
+          ),
+          Slack::Messages::Message.new(
+            ts: Time.now.to_f.to_s
+          ),
+          Slack::Messages::Message.new(
+            hidden: true,
+            ts: Time.now.to_f.to_s
           ),
         ]
       ),
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "bot_message"
+            subtype: "bot_message",
+            ts: Time.now.to_f.to_s
           ),
         ]
       ),
@@ -130,30 +156,75 @@ describe Archivist::ArchiveChannels do
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "channel_join"
+            subtype: "channel_join",
+            ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
-            subtype: "channel_leave"
+            subtype: "channel_leave",
+            ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
-            subtype: "bot_message"
+            subtype: "bot_message",
+            ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
-            hidden: true
+            hidden: true,
+            ts: Time.now.to_f.to_s
           ),
         ]
       ),
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "bot_message"
+            subtype: "bot_message",
+            ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
-            subtype: "bot_message"
+            bot_id: "testbotid",
+            ts: Time.now.to_f.to_s
           ),
         ]
       ),
     ]
+  }
+  let(:warned_active_conversations_history_responses) {
+    [
+      Slack::Messages::Message.new(
+        messages: [
+          Slack::Messages::Message.new(
+            ts: Time.now.to_f.to_s
+          ),
+          Slack::Messages::Message.new(
+            blocks: [
+              Slack::Messages::Message.new(block_id: "archivist-warn-1234"),
+            ],
+            bot_id: "testbotid",
+            ts: Time.now.to_f.to_s
+          ),
+        ]
+      ),
+    ]
+  }
+  let(:warned_stale_conversations_history_responses) {
+    [
+      Slack::Messages::Message.new(
+        messages: [
+          Slack::Messages::Message.new(
+            blocks: [
+              Slack::Messages::Message.new(block_id: "archivist-warn-1234"),
+            ],
+            bot_id: "testbotid",
+            ts: Time.now.to_f.to_s
+          ),
+        ]
+      ),
+    ]
+  }
+
+  let(:warning_message_blocks) {
+    blocks = Archivist::ArchiveChannels::WARNING_MESSAGE_BLOCKS.dup
+    blocks[0][:block_id] = "archivist-warn-#{SecureRandom.uuid}"
+    blocks
   }
 
   before do
@@ -166,6 +237,7 @@ describe Archivist::ArchiveChannels do
     }
     allow(Archivist::Config).to receive(:rules) { rules }
 
+    allow(slack_client).to receive(:chat_postMessage)
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
     end
@@ -177,10 +249,16 @@ describe Archivist::ArchiveChannels do
         active_conversations_history_responses.each(&block)
       when stale_channel.id
         stale_conversations_history_responses.each(&block)
+      when warned_active_channel.id
+        warned_active_conversations_history_responses.each(&block)
+      when warned_stale_channel.id
+        warned_stale_conversations_history_responses.each(&block)
       else
         active_conversations_history_responses.each(&block)
       end
     end
+
+    allow(SecureRandom).to receive(:uuid) { "1234" }
   end
 
   describe "#run with default rules" do
@@ -278,11 +356,41 @@ describe Archivist::ArchiveChannels do
       end
     end
 
-    it "archives stale channels" do
+    it "warns stale channels" do
+      expect(slack_client)
+        .to receive(:chat_postMessage)
+        .with(channel: stale_channel.id, blocks: warning_message_blocks)
+
+      subject.run
+    end
+
+    it "doesn't warn active channels" do
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: active_channel.id, blocks: warning_message_blocks)
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: warned_active_channel.id, blocks: warning_message_blocks)
+
+      subject.run
+    end
+
+    it "doesn't warn warned channels" do
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: warned_active_channel.id, blocks: warning_message_blocks)
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: warned_stale_channel.id, blocks: warning_message_blocks)
+
+      subject.run
+    end
+
+    it "archives warned stale channels" do
       # TODO: Replace this with a check of the Slack client method instead.
       expect(subject)
         .to receive(:archive_channel)
-        .with(stale_channel)
+        .with(warned_stale_channel)
 
       subject.run
     end
@@ -292,6 +400,24 @@ describe Archivist::ArchiveChannels do
       expect(subject)
         .not_to receive(:archive_channel)
         .with(active_channel)
+
+      subject.run
+    end
+
+    it "doesn't archive stale but unwarned channels" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(stale_channel)
+
+      subject.run
+    end
+
+    it "doesn't archive warned active channels" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(warned_active_channel)
 
       subject.run
     end
@@ -345,11 +471,50 @@ describe Archivist::ArchiveChannels do
       subject.run
     end
 
-    it "archives stale channels covered by the rules" do
+    it "warns stale channels" do
+      expect(slack_client)
+        .to receive(:chat_postMessage)
+        .with(channel: stale_channel.id, blocks: warning_message_blocks)
+
+      subject.run
+    end
+
+    it "doesn't warn active channels" do
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: active_channel.id, blocks: warning_message_blocks)
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: warned_active_channel.id, blocks: warning_message_blocks)
+
+      subject.run
+    end
+
+    it "doesn't warn warned channels" do
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: warned_active_channel.id, blocks: warning_message_blocks)
+      expect(slack_client)
+        .not_to receive(:chat_postMessage)
+        .with(channel: warned_stale_channel.id, blocks: warning_message_blocks)
+
+      subject.run
+    end
+
+    it "archives warned stale channels" do
       # TODO: Replace this with a check of the Slack client method instead.
       expect(subject)
         .to receive(:archive_channel)
-        .with(stale_channel)
+        .with(warned_stale_channel)
+
+      subject.run
+    end
+
+    it "archives warned stale channels covered by the rules" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .to receive(:archive_channel)
+        .with(warned_stale_channel)
 
       subject.run
     end
@@ -359,6 +524,24 @@ describe Archivist::ArchiveChannels do
       expect(subject)
         .not_to receive(:archive_channel)
         .with(active_channel)
+
+      subject.run
+    end
+
+    it "doesn't archive stale but unwarned channels covered by the rules" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(stale_channel)
+
+      subject.run
+    end
+
+    it "doesn't archive warned active channels covered by the rules" do
+      # TODO: Replace this with a check of the Slack client method instead.
+      expect(subject)
+        .not_to receive(:archive_channel)
+        .with(warned_active_channel)
 
       subject.run
     end

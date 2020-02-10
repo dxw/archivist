@@ -28,10 +28,13 @@ Inspired by
 
 #### Default rules
 
-By default, all channels are archived after 30 days without a "real" message or
-channel action. In this case "real" messages or chat actions are messages
-visible to anyone in the channel that weren't sent by a bot user, except for
-notifications about users joining or leaving the channel.
+By default, all channels are warned after 30 days without a "real" message or
+channel action. If the channel is still stale after ~7 days, the channel is
+archived.
+
+In this case "real" messages or chat actions are messages visible to anyone in
+the channel that weren't sent by a bot user, except for notifications about
+users joining or leaving the channel.
 
 ##### Disable defaults
 
@@ -58,7 +61,7 @@ The available arguments are:
 
 - `days` (integer)
 
-  The minimum number of days a channel must be inactive before being archived.
+  The minimum number of days a channel must be inactive before being warned.
 
 - `skip` (boolean)
 
