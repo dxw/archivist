@@ -1,6 +1,4 @@
 describe Archivist::ArchiveChannels do
-  subject { Archivist::ArchiveChannels }
-
   let(:slack_client) { double(Slack::Web::Client) }
   let(:no_archive_label) { "%noarchive" }
   let(:use_default_rules) { true }
@@ -185,11 +183,7 @@ describe Archivist::ArchiveChannels do
     end
   end
 
-  before :each do
-    subject.flush_cache
-  end
-
-  describe ".run with default rules" do
+  describe "#run with default rules" do
     let(:use_default_rules) { true }
 
     it "joins channels it's not already a member of" do
@@ -254,26 +248,34 @@ describe Archivist::ArchiveChannels do
       subject.run
     end
 
-    it "uses activity from the last 30 days when deciding whether a channel not covered by any rules is stale" do
-      expect(slack_client)
-        .to receive(:conversations_history)
-        .with(
-          channel: active_channel.id,
-          oldest: Date.today - 30
-        )
+    it "uses activity no older than 30 days when deciding whether a channel is stale by default" do
+      Timecop.freeze do
+        expect(slack_client)
+          .to receive(:conversations_history)
+          .with(
+            channel: active_channel.id,
+            limit: nil,
+            latest: Time.now,
+            oldest: Date.today - 30
+          )
 
-      subject.run
+        subject.run
+      end
     end
 
-    it "uses activity from the date range specified by the rule when deciding whether a channel covered by a rules is stale" do
-      expect(slack_client)
-        .to receive(:conversations_history)
-        .with(
-          channel: stale_channel.id,
-          oldest: Date.today - rules[0].days
-        )
+    it "uses activity no older than specified by a matching rule when deciding whether a channel is stale" do
+      Timecop.freeze do
+        expect(slack_client)
+          .to receive(:conversations_history)
+          .with(
+            channel: stale_channel.id,
+            limit: nil,
+            latest: Time.now,
+            oldest: Date.today - rules[0].days
+          )
 
-      subject.run
+        subject.run
+      end
     end
 
     it "archives stale channels" do
@@ -316,7 +318,7 @@ describe Archivist::ArchiveChannels do
     end
   end
 
-  describe ".run without default rules" do
+  describe "#run without default rules" do
     let(:use_default_rules) { false }
 
     it "joins channels covered by the rules" do

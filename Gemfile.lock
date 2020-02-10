@@ -68,6 +68,7 @@ GEM
       rubocop (~> 0.77.0)
       rubocop-performance (~> 1.5.1)
     thread_safe (0.3.6)
+    timecop (0.8.1)
     tzinfo (1.2.6)
       thread_safe (~> 0.1)
     unicode-display_width (1.6.1)
@@ -88,6 +89,7 @@ DEPENDENCIES
   rspec
   slack-ruby-client
   standard
+  timecop
 
 BUNDLED WITH
    2.1.4

@@ -4,8 +4,6 @@ module Archivist
       attr_reader :slack_client, :no_archive_label, :use_default_rules, :rules
 
       def configure
-        ArchiveChannels.flush_cache
-
         @slack_client = Slack::Web::Client.new(token: ENV.fetch("ARCHIVIST_SLACK_API_TOKEN"))
         @no_archive_label = ENV.fetch("ARCHIVIST_NO_ARCHIVE_LABEL", nil)
         @use_default_rules = ENV.fetch("ARCHIVIST_DISABLE_DEFAULTS", nil).nil?
