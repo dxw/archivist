@@ -70,9 +70,11 @@ module Archivist
     end
 
     def warn_channels(channels)
-      channels
-        .select { |channel| warnable?(channel) }
-        .each { |channel| warn_channel(channel) }
+      channels_to_warn = channels.select { |channel| warnable?(channel) }
+
+      channels_to_warn.each { |channel| warn_channel(channel) }
+
+      channels_to_warn
     end
 
     def warn_channel(channel)
@@ -86,14 +88,13 @@ module Archivist
     end
 
     def archive_channels(channels)
-      channels
-        .select { |channel| archivable?(channel) }
-        .each { |channel| archive_channel(channel) }
-    end
+      channels_to_archive = channels.select { |channel| archivable?(channel) }
 
-    # TODO: Actually do the archiving!
-    def archive_channel(channel)
-      puts "Archiving ##{channel.name}"
+      channels_to_archive.each do |channel|
+        Config.slack_client.conversations_archive(channel: channel.id)
+      end
+
+      channels_to_archive
     end
 
     def monitored_channels

@@ -238,6 +238,7 @@ describe Archivist::ArchiveChannels do
     allow(Archivist::Config).to receive(:rules) { rules }
 
     allow(slack_client).to receive(:chat_postMessage)
+    allow(slack_client).to receive(:conversations_archive)
     allow(slack_client).to receive(:conversations_list) do |&block|
       conversations_list_responses.each { |response| block.call(response) }
     end
@@ -389,58 +390,52 @@ describe Archivist::ArchiveChannels do
     end
 
     it "archives warned stale channels" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .to receive(:archive_channel)
-        .with(warned_stale_channel)
+      expect(slack_client)
+        .to receive(:conversations_archive)
+        .with(channel: warned_stale_channel.id)
 
       subject.run
     end
 
     it "doesn't archive active channels" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(active_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: active_channel.id)
 
       subject.run
     end
 
     it "doesn't archive stale but unwarned channels" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(stale_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: stale_channel.id)
 
       subject.run
     end
 
     it "doesn't archive warned active channels" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(warned_active_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: warned_active_channel.id)
 
       subject.run
     end
 
     it "doesn't archive the general channel" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(general_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: general_channel.id)
 
       subject.run
     end
 
     it "doesn't archive shared or pending shared channels" do
-      # TODO: Replace these with checks of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(shared_channel)
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(pending_shared_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: shared_channel.id)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: pending_shared_channel.id)
 
       subject.run
     end
@@ -504,46 +499,41 @@ describe Archivist::ArchiveChannels do
     end
 
     it "archives warned stale channels" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .to receive(:archive_channel)
-        .with(warned_stale_channel)
+      expect(slack_client)
+        .to receive(:conversations_archive)
+        .with(channel: warned_stale_channel.id)
 
       subject.run
     end
 
     it "archives warned stale channels covered by the rules" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .to receive(:archive_channel)
-        .with(warned_stale_channel)
+      expect(slack_client)
+        .to receive(:conversations_archive)
+        .with(channel: warned_stale_channel.id)
 
       subject.run
     end
 
     it "doesn't archive any channels not covered by the rules" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(active_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: active_channel.id)
 
       subject.run
     end
 
     it "doesn't archive stale but unwarned channels covered by the rules" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(stale_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: stale_channel.id)
 
       subject.run
     end
 
     it "doesn't archive warned active channels covered by the rules" do
-      # TODO: Replace this with a check of the Slack client method instead.
-      expect(subject)
-        .not_to receive(:archive_channel)
-        .with(warned_active_channel)
+      expect(slack_client)
+        .not_to receive(:conversations_archive)
+        .with(channel: warned_active_channel.id)
 
       subject.run
     end
