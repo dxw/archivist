@@ -334,7 +334,8 @@ describe Archivist::ArchiveChannels do
             channel: active_channel.id,
             limit: nil,
             latest: Time.now,
-            oldest: Date.today - 30
+            oldest: Date.today - 30,
+            sleep_interval: 1
           )
 
         subject.run
@@ -349,7 +350,8 @@ describe Archivist::ArchiveChannels do
             channel: stale_channel.id,
             limit: nil,
             latest: Time.now,
-            oldest: Date.today - rules[0].days
+            oldest: Date.today - rules[0].days,
+            sleep_interval: 1
           )
 
         subject.run
