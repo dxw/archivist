@@ -22,4 +22,8 @@ namespace :archivist do
   task configure: :dotenv do
     Archivist.configure
   end
+
+  task archive_channels: %i[dotenv configure] do
+    Archivist::ArchiveChannels.new.run
+  end
 end
