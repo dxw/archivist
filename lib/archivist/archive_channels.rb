@@ -135,8 +135,11 @@ module Archivist
         channel.is_general ||
         channel.is_shared ||
         channel.pending_shared&.any? ||
-        channel.purpose&.value&.include?(Config.no_archive_label) ||
-        channel.topic&.value&.include?(Config.no_archive_label)
+        (
+          Config.no_archive_label &&
+          channel.purpose&.value&.include?(Config.no_archive_label) ||
+          channel.topic&.value&.include?(Config.no_archive_label)
+        )
 
       rule = Config.rules.detect { |rule| rule.match?(channel) }
 
