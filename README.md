@@ -26,6 +26,12 @@ Inspired by
 
 ## Configure
 
+### Schedule
+
+The schedule for running the rules is determined by the crontab expression in
+[`.github/workflows/cron:archive_channels.yml`](.github/workflows/cron:archive_channels.yml).
+To change the schedule, modify that expression.
+
 ### Rules
 
 #### Default rules

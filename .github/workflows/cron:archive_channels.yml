@@ -1,0 +1,35 @@
+name: Archive stale channels
+
+on:
+  schedule:
+    - cron: 00 12 * * 5
+
+env:
+  ARCHIVIST_SLACK_API_TOKEN: ${{ secrets.ARCHIVIST_SLACK_API_TOKEN }}
+  ARCHIVIST_NO_ARCHIVE_LABEL: ${{ secrets.ARCHIVIST_NO_ARCHIVE_LABEL }}
+  ARCHIVIST_DISABLE_DEFAULTS: ${{ secrets.ARCHIVIST_DISABLE_DEFAULTS }}
+  ARCHIVIST_RULES: ${{ secrets.ARCHIVIST_RULES }}
+
+jobs:
+  archive_channels:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-ruby@v1
+        with:
+          ruby-version: "2.7.0"
+
+      - name: Install test dependencies
+        run: bundle install --frozen --jobs 4 --retry 3 --without development
+
+      - name: Run tests
+        run: rake
+
+      - name: Remove test dependencies
+        run:
+          bundle install --frozen --jobs 4 --retry 3 --without development test
+
+      - name: Archive stale channels
+        run: rake archivist:archive_channels
