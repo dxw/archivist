@@ -57,5 +57,16 @@ describe Archivist::Config do
 
       ENV["ARCHIVIST_RULES"] = old_rules
     end
+
+    it "populates the report channel from the environment if one is set" do
+      old_channel = ENV["ARCHIVIST_REPORT_CHANNEL_ID"]
+      ENV["ARCHIVIST_REPORT_CHANNEL_ID"] = "C12345678"
+
+      subject.configure
+
+      ENV["ARCHIVIST_REPORT_CHANNEL_ID"] = old_channel
+
+      expect(subject.report_channel_id).to eq("C12345678")
+    end
   end
 end

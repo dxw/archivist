@@ -89,3 +89,9 @@ if a channel has its value in the description or topic, it will be ignored.
 Bear in mind that we look for it anywhere in the description or topic, including
 mid-sentence and mid-word, so be sure to use some form of delimeter to avoid
 false positives.
+
+### Activity report
+
+Archivist can be configured to report the actions it took. To enable that
+behaviour, set `ARCHIVIST_REPORT_CHANNEL_ID` to the ID of the channel you want
+the report to be posted to.

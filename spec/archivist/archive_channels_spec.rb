@@ -10,6 +10,12 @@ describe Archivist::ArchiveChannels do
     ]
   }
 
+  let(:report_channel) {
+    Slack::Messages::Message.new(
+      id: "report-test-id",
+      name: "report-test",
+    )
+  }
   let(:active_channel) {
     Slack::Messages::Message.new(
       id: "active-test-id",
@@ -91,6 +97,7 @@ describe Archivist::ArchiveChannels do
     [
       Slack::Messages::Message.new(
         channels: [
+          report_channel,
           active_channel,
           stale_channel,
           warned_active_channel,
@@ -236,6 +243,9 @@ describe Archivist::ArchiveChannels do
       use_default_rules
     }
     allow(Archivist::Config).to receive(:rules) { rules }
+    allow(Archivist::Config).to receive(:report_channel_id) {
+      report_channel.id
+    }
 
     allow(slack_client).to receive(:chat_postMessage)
     allow(slack_client).to receive(:conversations_archive)
@@ -264,6 +274,14 @@ describe Archivist::ArchiveChannels do
 
   describe "#run with default rules" do
     let(:use_default_rules) { true }
+
+    it "joins the report channel" do
+      expect(slack_client)
+        .to receive(:conversations_join)
+        .with(channel: report_channel.id)
+
+      subject.run
+    end
 
     it "joins channels it's not already a member of" do
       expect(slack_client)
@@ -439,10 +457,65 @@ describe Archivist::ArchiveChannels do
 
       subject.run
     end
+
+    it "sends a report to the report channel" do
+      expect(slack_client)
+        .to receive(:chat_postMessage)
+        .with(
+          channel: report_channel.id,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "plain_text",
+                text: "I have archived the following inactive channels:",
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: ":file_folder: #warned-stale-test",
+              },
+            },
+          ]
+        )
+      expect(slack_client)
+        .to receive(:chat_postMessage)
+        .with(
+          channel: report_channel.id,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "plain_text",
+                text: "I will archive the following channels in a week if they remain inactive:",
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: ":open_file_folder: #stale-test",
+              },
+            },
+          ]
+        )
+
+      subject.run
+    end
   end
 
   describe "#run without default rules" do
     let(:use_default_rules) { false }
+
+    it "joins the report channel" do
+      expect(slack_client)
+        .to receive(:conversations_join)
+        .with(channel: report_channel.id)
+
+      subject.run
+    end
 
     it "joins channels covered by the rules" do
       expect(slack_client)
@@ -542,6 +615,53 @@ describe Archivist::ArchiveChannels do
       expect(slack_client)
         .to receive(:conversations_leave)
         .with(channel: member_channel.id)
+
+      subject.run
+    end
+
+    it "sends a report to the report channel" do
+      expect(slack_client)
+        .to receive(:chat_postMessage)
+        .with(
+          channel: report_channel.id,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "plain_text",
+                text: "I have archived the following inactive channels:",
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: ":file_folder: #warned-stale-test",
+              },
+            },
+          ]
+        )
+      expect(slack_client)
+        .to receive(:chat_postMessage)
+        .with(
+          channel: report_channel.id,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "plain_text",
+                text: "I will archive the following channels in a week if they remain inactive:",
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: ":open_file_folder: #stale-test",
+              },
+            },
+          ]
+        )
 
       subject.run
     end

@@ -46,9 +46,23 @@ module Archivist
 
     def run
       leave_channels(not_monitored_channels)
-      join_new_channels(monitored_channels)
-      warn_channels(monitored_channels)
-      archive_channels(monitored_channels)
+
+      channels_to_join =
+        Config.report_channel_id ?
+        (
+          monitored_channels +
+          all_channels.select { |channel|
+            channel.id == Config.report_channel_id
+          }
+        ) :
+        monitored_channels
+
+      join_new_channels(channels_to_join)
+
+      warned = warn_channels(monitored_channels)
+      archived = archive_channels(monitored_channels)
+
+      send_report(archived, warned)
     end
 
     private
@@ -95,6 +109,54 @@ module Archivist
       end
 
       channels_to_archive
+    end
+
+    def send_report(archived, warned)
+      return unless Config.report_channel_id
+
+      unless archived.empty?
+        Config.slack_client.chat_postMessage(
+          channel: Config.report_channel_id,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "plain_text",
+                text: "I have archived the following inactive channels:",
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: archived.map { |channel| ":file_folder: ##{channel.name}" }.join("\n"),
+              },
+            },
+          ]
+        )
+      end
+
+      unless warned.empty?
+        Config.slack_client.chat_postMessage(
+          channel: Config.report_channel_id,
+          blocks: [
+            {
+              type: "section",
+              text: {
+                type: "plain_text",
+                text: "I will archive the following channels in a week if they remain inactive:",
+              },
+            },
+            {
+              type: "section",
+              text: {
+                type: "mrkdwn",
+                text: warned.map { |channel| ":open_file_folder: ##{channel.name}" }.join("\n"),
+              },
+            },
+          ]
+        )
+      end
     end
 
     def monitored_channels
