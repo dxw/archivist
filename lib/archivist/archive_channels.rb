@@ -279,7 +279,7 @@ module Archivist
         max_days_ago: max_days_ago
       ) do |response|
         warning_message = response.messages.detect { |message|
-          (message.subtype === "bot_message" || message.bot_id) &&
+          (message.subtype == "bot_message" || message.bot_id) &&
             message.blocks &&
             message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
         }
