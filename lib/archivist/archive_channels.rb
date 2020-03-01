@@ -44,6 +44,12 @@ module Archivist
       },
     ].freeze
 
+    attr_reader :log
+
+    def initialize
+      @log = Logger.new(STDOUT)
+    end
+
     def run
       channels_to_leave = not_monitored_channels.reject { |channel|
         report_channels.include?(channel)
@@ -65,6 +71,8 @@ module Archivist
       channels.each do |channel|
         next unless channel.is_member
 
+        log.info("Leaving ##{channel.name}")
+
         Config.slack_client.conversations_leave(channel: channel.id)
       end
     end
@@ -72,6 +80,8 @@ module Archivist
     def join_new_channels(channels)
       channels.each do |channel|
         next if channel.is_member
+
+        log.info("Joining ##{channel.name}")
 
         Config.slack_client.conversations_join(channel: channel.id)
       end
@@ -89,6 +99,8 @@ module Archivist
       blocks = WARNING_MESSAGE_BLOCKS.dup
       blocks[0][:block_id] = "#{WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
 
+      log.info("Warning ##{channel.name}")
+
       Config.slack_client.chat_postMessage(
         channel: channel.id,
         blocks: blocks
@@ -99,6 +111,8 @@ module Archivist
       channels_to_archive = channels.select { |channel| archivable?(channel) }
 
       channels_to_archive.each do |channel|
+        log.info("Archiving ##{channel.name}")
+
         Config.slack_client.conversations_archive(channel: channel.id)
       end
 
@@ -109,6 +123,8 @@ module Archivist
       return unless Config.report_channel_id
 
       unless archived.empty?
+        log.info("Reporting on archived channels")
+
         Config.slack_client.chat_postMessage(
           channel: Config.report_channel_id,
           blocks: [
@@ -131,6 +147,8 @@ module Archivist
       end
 
       unless warned.empty?
+        log.info("Reporting on warned channels")
+
         Config.slack_client.chat_postMessage(
           channel: Config.report_channel_id,
           blocks: [
@@ -249,6 +267,8 @@ module Archivist
     end
 
     def has_recent_real_messages?(channel, max_days_ago: nil)
+      log.info("Checking ##{channel.name} for real messages...")
+
       last_messages(
         channel,
         max_days_ago: max_days_ago || DEFAULT_ARCHIVABLE_DAYS
@@ -259,8 +279,14 @@ module Archivist
             IGNORED_MESSAGE_TYPES.include?(message.subtype)
         }
 
-        return true if real_messages.any?
+        if real_messages.any?
+          log.info("   ...found real messages")
+
+          return true
+        end
       end
+
+      log.info("   ...no real messages found")
 
       false
     end
@@ -270,6 +296,8 @@ module Archivist
     end
 
     def has_warning_message?(channel, min_days_ago: nil, max_days_ago: nil)
+      log.info("Checking ##{channel.name} for recent warning messages...")
+
       last_messages(
         channel,
         # We run in small batches as we run this on channels that don't have
@@ -285,12 +313,16 @@ module Archivist
             message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
         }
 
-        next unless warning_message
+        if warning_message
+          message_sent_at = Time.new(warning_message.ts)
 
-        message_sent_at = Time.new(warning_message.ts)
+          log.info("   ...found warning message sent at #{message_sent_at}")
 
-        return true if message_sent_at >= Date.today - DEFAULT_ARCHIVABLE_DAYS
+          return true if message_sent_at >= Date.today - DEFAULT_ARCHIVABLE_DAYS
+        end
       end
+
+      log.info("   ...no recent warning messages found")
 
       false
     end

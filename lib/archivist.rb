@@ -1,3 +1,4 @@
+require "logger"
 require "memoist"
 require "securerandom"
 require "slack-ruby-client"
