@@ -45,18 +45,12 @@ module Archivist
     ].freeze
 
     def run
-      leave_channels(not_monitored_channels)
+      channels_to_leave = not_monitored_channels.reject { |channel|
+        report_channels.include?(channel)
+      }
+      channels_to_join = monitored_channels + report_channels
 
-      channels_to_join =
-        Config.report_channel_id ?
-        (
-          monitored_channels +
-          all_channels.select { |channel|
-            channel.id == Config.report_channel_id
-          }
-        ) :
-        monitored_channels
-
+      leave_channels(channels_to_leave)
       join_new_channels(channels_to_join)
 
       warned = warn_channels(monitored_channels)
@@ -168,6 +162,13 @@ module Archivist
       all_channels - monitored_channels
     end
     memoize :not_monitored_channels
+
+    def report_channels
+      return [] unless Config.report_channel_id
+
+      all_channels.select { |channel| channel.id == Config.report_channel_id }
+    end
+    memoize :report_channels
 
     def all_channels
       channels = []
