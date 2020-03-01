@@ -2,10 +2,15 @@ describe Archivist::Config do
   subject { Archivist::Config }
 
   describe ".configure" do
-    it "creates a Slack client instance" do
+    it "populates the Slack API token from the environment" do
+      old_token = ENV["ARCHIVIST_SLACK_API_TOKEN"]
+      ENV["ARCHIVIST_SLACK_API_TOKEN"] = "test-api-token"
+
       subject.configure
 
-      expect(subject.slack_client).to be_instance_of(Slack::Web::Client)
+      ENV["ARCHIVIST_SLACK_API_TOKEN"] = old_token
+
+      expect(subject.slack_api_token).to eq("test-api-token")
     end
 
     it "populates the no archive label from the environment if one is set" do

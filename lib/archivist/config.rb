@@ -2,7 +2,7 @@ module Archivist
   class Config
     class << self
       attr_reader(
-        :slack_client,
+        :slack_api_token,
         :no_archive_label,
         :use_default_rules,
         :rules,
@@ -10,7 +10,8 @@ module Archivist
       )
 
       def configure
-        @slack_client = Slack::Web::Client.new(token: ENV.fetch("ARCHIVIST_SLACK_API_TOKEN"))
+        @slack_api_token = ENV.fetch("ARCHIVIST_SLACK_API_TOKEN")
+
         @no_archive_label = ENV.fetch("ARCHIVIST_NO_ARCHIVE_LABEL", nil)
         @use_default_rules = ENV.fetch("ARCHIVIST_DISABLE_DEFAULTS", nil).nil?
         @rules = parse_rules(ENV.fetch("ARCHIVIST_RULES", nil))

@@ -237,7 +237,7 @@ describe Archivist::ArchiveChannels do
   before do
     Archivist::Config.configure
 
-    allow(Archivist::Config).to receive(:slack_client) { slack_client }
+    allow(Archivist::Config).to receive(:slack_api_token) { "test-api-token" }
     allow(Archivist::Config).to receive(:no_archive_label) { no_archive_label }
     allow(Archivist::Config).to receive(:use_default_rules) {
       use_default_rules
@@ -246,6 +246,10 @@ describe Archivist::ArchiveChannels do
     allow(Archivist::Config).to receive(:report_channel_id) {
       report_channel.id
     }
+
+    Archivist::Client.configure
+
+    allow(Archivist::Client).to receive(:slack_client) { slack_client }
 
     allow(slack_client).to receive(:chat_postMessage)
     allow(slack_client).to receive(:conversations_archive)

@@ -73,7 +73,7 @@ module Archivist
 
         log.info("Leaving ##{channel.name}")
 
-        Config.slack_client.conversations_leave(channel: channel.id)
+        Client.leave(channel)
       end
     end
 
@@ -83,7 +83,7 @@ module Archivist
 
         log.info("Joining ##{channel.name}")
 
-        Config.slack_client.conversations_join(channel: channel.id)
+        Client.join(channel)
       end
     end
 
@@ -101,10 +101,7 @@ module Archivist
 
       log.info("Warning ##{channel.name}")
 
-      Config.slack_client.chat_postMessage(
-        channel: channel.id,
-        blocks: blocks
-      )
+      Client.post_to(channel, blocks: blocks)
     end
 
     def archive_channels(channels)
@@ -113,7 +110,7 @@ module Archivist
       channels_to_archive.each do |channel|
         log.info("Archiving ##{channel.name}")
 
-        Config.slack_client.conversations_archive(channel: channel.id)
+        Client.archive(channel)
       end
 
       channels_to_archive
@@ -125,8 +122,8 @@ module Archivist
       unless archived.empty?
         log.info("Reporting on archived channels")
 
-        Config.slack_client.chat_postMessage(
-          channel: Config.report_channel_id,
+        Client.post_to_id(
+          Config.report_channel_id,
           blocks: [
             {
               type: "section",
@@ -149,8 +146,8 @@ module Archivist
       unless warned.empty?
         log.info("Reporting on warned channels")
 
-        Config.slack_client.chat_postMessage(
-          channel: Config.report_channel_id,
+        Client.post_to_id(
+          Config.report_channel_id,
           blocks: [
             {
               type: "section",
@@ -189,20 +186,7 @@ module Archivist
     memoize :report_channels
 
     def all_channels
-      channels = []
-
-      Config.slack_client.conversations_list(
-        # API parameters
-        exclude_archived: true,
-        types: "public_channel",
-
-        # Client configuration
-        sleep_interval: 2
-      ) do |response|
-        channels.concat(response.channels)
-      end
-
-      channels
+      Client.list_public_channels
     end
     memoize :all_channels
 
@@ -269,7 +253,7 @@ module Archivist
     def has_recent_real_messages?(channel, max_days_ago: nil)
       log.info("Checking ##{channel.name} for real messages...")
 
-      last_messages(
+      Client.last_messages_in(
         channel,
         max_days_ago: max_days_ago || DEFAULT_ARCHIVABLE_DAYS
       ) do |response|
@@ -298,7 +282,7 @@ module Archivist
     def has_warning_message?(channel, min_days_ago: nil, max_days_ago: nil)
       log.info("Checking ##{channel.name} for recent warning messages...")
 
-      last_messages(
+      Client.last_messages_in(
         channel,
         # We run in small batches as we run this on channels that don't have
         # recent activity, so we expect the warning message to be very near
@@ -325,21 +309,6 @@ module Archivist
       log.info("   ...no recent warning messages found")
 
       false
-    end
-
-    def last_messages(channel, limit: nil, min_days_ago: nil, max_days_ago: nil, &block)
-      Config.slack_client.conversations_history(
-        # API parameters
-        channel: channel.id,
-        limit: limit,
-        # Providing `latest` means the history is fetched most recent first.
-        latest: min_days_ago.nil? ? Time.now : (Date.today - min_days_ago),
-        oldest: max_days_ago && Date.today - max_days_ago,
-
-        # Client configuration
-        sleep_interval: 1,
-        &block
-      )
     end
   end
 end
