@@ -18,7 +18,11 @@ module Archivist
           # Client configuration
           sleep_interval: 2
         ) do |response|
-          channels.concat(response.channels)
+          new_channels = response.channels.map { |channel|
+            Channel.new(channel)
+          }
+
+          channels.concat(new_channels)
         end
 
         channels

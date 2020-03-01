@@ -1,22 +1,5 @@
 module Archivist
   class ArchiveChannels
-    extend Memoist
-
-    IGNORED_MESSAGE_TYPES = %w[
-      bot_message
-      channel_join
-      channel_leave
-      message_deleted
-    ].freeze
-
-    DEFAULT_ARCHIVABLE_DAYS = 30
-    # This is one day less than the cycle length to allow for fuzziness in
-    # run times.
-    DAYS_AFTER_WARNING_BEFORE_ARCHIVING = 6
-
-    WARNING_BLOCK_ID_PREFIX = "archivist-warn"
-    ARCHIVING_BLOCK_ID_PREFIX = "archivist-archive"
-
     WARNING_MESSAGE_BLOCKS = [
       {
         type: "section",
@@ -51,25 +34,24 @@ module Archivist
     end
 
     def run
-      channels_to_leave = not_monitored_channels.reject { |channel|
-        report_channels.include?(channel)
-      }
-      channels_to_join = monitored_channels + report_channels
+      leave_channels
+      join_channels
 
-      leave_channels(channels_to_leave)
-      join_new_channels(channels_to_join)
+      warned = warn_channels
+      archived = archive_channels
 
-      warned = warn_channels(monitored_channels)
-      archived = archive_channels(monitored_channels)
-
-      send_report(archived, warned)
+      post_report(archived, warned)
     end
 
     private
 
-    def leave_channels(channels)
+    def leave_channels
+      channels = Client.list_public_channels.reject { |channel|
+        channel.monitored? || channel.report_target?
+      }
+
       channels.each do |channel|
-        next unless channel.is_member
+        next unless channel.member?
 
         log.info("Leaving ##{channel.name}")
 
@@ -77,9 +59,13 @@ module Archivist
       end
     end
 
-    def join_new_channels(channels)
+    def join_channels
+      channels = Client.list_public_channels.select { |channel|
+        channel.monitored? || channel.report_target?
+      }
+
       channels.each do |channel|
-        next if channel.is_member
+        next if channel.member?
 
         log.info("Joining ##{channel.name}")
 
@@ -87,36 +73,39 @@ module Archivist
       end
     end
 
-    def warn_channels(channels)
-      channels_to_warn = channels.select { |channel| warnable?(channel) }
+    def warn_channels
+      channels = Client.list_public_channels.select { |channel|
+        channel.monitored? && channel.warnable?
+      }
 
-      channels_to_warn.each { |channel| warn_channel(channel) }
+      channels.each do |channel|
+        blocks = WARNING_MESSAGE_BLOCKS.dup
+        blocks[0][:block_id] =
+          "#{Channel::WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
 
-      channels_to_warn
+        log.info("Warning ##{channel.name}")
+
+        Client.post_to(channel, blocks: blocks)
+      end
+
+      channels
     end
 
-    def warn_channel(channel)
-      blocks = WARNING_MESSAGE_BLOCKS.dup
-      blocks[0][:block_id] = "#{WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
+    def archive_channels
+      channels = Client.list_public_channels.select { |channel|
+        channel.monitored? && channel.archivable?
+      }
 
-      log.info("Warning ##{channel.name}")
-
-      Client.post_to(channel, blocks: blocks)
-    end
-
-    def archive_channels(channels)
-      channels_to_archive = channels.select { |channel| archivable?(channel) }
-
-      channels_to_archive.each do |channel|
+      channels.each do |channel|
         log.info("Archiving ##{channel.name}")
 
         Client.archive(channel)
       end
 
-      channels_to_archive
+      channels
     end
 
-    def send_report(archived, warned)
+    def post_report(archived, warned)
       return if Config.report_channel_id.blank?
 
       unless archived.empty?
@@ -166,149 +155,6 @@ module Archivist
           ]
         )
       end
-    end
-
-    def monitored_channels
-      all_channels.select { |channel| monitored?(channel) }
-    end
-    memoize :monitored_channels
-
-    def not_monitored_channels
-      all_channels - monitored_channels
-    end
-    memoize :not_monitored_channels
-
-    def report_channels
-      return [] if Config.report_channel_id.blank?
-
-      all_channels.select { |channel| channel.id == Config.report_channel_id }
-    end
-    memoize :report_channels
-
-    def all_channels
-      Client.list_public_channels
-    end
-    memoize :all_channels
-
-    def monitored?(channel)
-      !not_monitored?(channel)
-    end
-    memoize :monitored?
-
-    def not_monitored?(channel)
-      never_monitored =
-        channel.is_general ||
-        channel.is_shared ||
-        channel.pending_shared&.any? ||
-        (
-          Config.no_archive_label.present? &&
-          channel.purpose&.value&.include?(Config.no_archive_label) ||
-          channel.topic&.value&.include?(Config.no_archive_label)
-        )
-
-      rule = Config.rules.detect { |rule| rule.match?(channel) }
-
-      if Config.use_default_rules
-        never_monitored || rule&.skip
-      else
-        never_monitored || rule.nil? || rule.skip
-      end
-    end
-    memoize :not_monitored?
-
-    def warnable?(channel)
-      stale?(channel) && not_warned?(channel)
-    end
-    memoize :warnable?
-
-    def archivable?(channel)
-      stale?(channel) &&
-        warned?(channel, min_days_ago: DAYS_AFTER_WARNING_BEFORE_ARCHIVING)
-    end
-    memoize :archivable?
-
-    def stale?(channel)
-      rule = Config.rules.detect { |rule| rule.match?(channel) }
-
-      has_no_recent_real_messages?(channel, max_days_ago: rule&.days)
-    end
-    memoize :stale?
-
-    def warned?(channel, min_days_ago: nil)
-      rule = Config.rules.detect { |rule| rule.match?(channel) }
-
-      has_warning_message?(
-        channel,
-        min_days_ago: min_days_ago,
-        # We ignore warnings outside of the stale range so that if something
-        # went wrong, we'd warn again eventually.
-        max_days_ago: rule&.days
-      )
-    end
-
-    def not_warned?(channel, min_days_ago: nil)
-      !warned?(channel, min_days_ago: min_days_ago)
-    end
-
-    def has_recent_real_messages?(channel, max_days_ago: nil)
-      log.info("Checking ##{channel.name} for real messages...")
-
-      Client.last_messages_in(
-        channel,
-        max_days_ago: max_days_ago || DEFAULT_ARCHIVABLE_DAYS
-      ) do |response|
-        real_messages = response.messages.reject { |message|
-          message.hidden ||
-            message.bot_id ||
-            IGNORED_MESSAGE_TYPES.include?(message.subtype)
-        }
-
-        if real_messages.any?
-          log.info("   ...found real messages")
-
-          return true
-        end
-      end
-
-      log.info("   ...no real messages found")
-
-      false
-    end
-
-    def has_no_recent_real_messages?(channel, max_days_ago: nil)
-      !has_recent_real_messages?(channel, max_days_ago: max_days_ago)
-    end
-
-    def has_warning_message?(channel, min_days_ago: nil, max_days_ago: nil)
-      log.info("Checking ##{channel.name} for recent warning messages...")
-
-      Client.last_messages_in(
-        channel,
-        # We run in small batches as we run this on channels that don't have
-        # recent activity, so we expect the warning message to be very near
-        # the end.
-        limit: 5,
-        min_days_ago: min_days_ago,
-        max_days_ago: max_days_ago
-      ) do |response|
-        warning_message = response.messages.detect { |message|
-          (message.subtype == "bot_message" || message.bot_id) &&
-            message.blocks &&
-            message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
-        }
-
-        if warning_message
-          message_sent_at = Time.new(warning_message.ts)
-
-          log.info("   ...found warning message sent at #{message_sent_at}")
-
-          return true if message_sent_at >= Date.today - DEFAULT_ARCHIVABLE_DAYS
-        end
-      end
-
-      log.info("   ...no recent warning messages found")
-
-      false
     end
   end
 end
