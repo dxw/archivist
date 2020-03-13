@@ -12,10 +12,10 @@ module Archivist
       def configure
         @slack_api_token = ENV.fetch("ARCHIVIST_SLACK_API_TOKEN")
 
-        @no_archive_label = ENV.fetch("ARCHIVIST_NO_ARCHIVE_LABEL", nil)
-        @use_default_rules = ENV.fetch("ARCHIVIST_DISABLE_DEFAULTS", nil).nil?
-        @rules = parse_rules(ENV.fetch("ARCHIVIST_RULES", nil))
-        @report_channel_id = ENV.fetch("ARCHIVIST_REPORT_CHANNEL_ID", nil)
+        @no_archive_label = ENV.fetch("ARCHIVIST_NO_ARCHIVE_LABEL", "")
+        @use_default_rules = ENV.fetch("ARCHIVIST_DISABLE_DEFAULTS", "").blank?
+        @rules = parse_rules(ENV.fetch("ARCHIVIST_RULES", ""))
+        @report_channel_id = ENV.fetch("ARCHIVIST_REPORT_CHANNEL_ID", "")
 
         self
       end
@@ -23,7 +23,7 @@ module Archivist
       private
 
       def parse_rules(rule_definitions)
-        return [] if rule_definitions.nil?
+        return [] if rule_definitions.blank?
 
         rules = rule_definitions
           .split(";")

@@ -30,7 +30,7 @@ module Archivist
         text: {
           type: "mrkdwn",
           text:
-            Config.no_archive_label ?
+            Config.no_archive_label.present? ?
               "If this is unexpected and unwanted and you want to ask me to ignore it in future, add `#{Config.no_archive_label}` to the channel's description or topic and I will. If it's just too soon, but you don't want me to ignore the channel entirely, continue to use it (send a message) and I'll check again later." :
               "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later.",
         },
@@ -117,7 +117,7 @@ module Archivist
     end
 
     def send_report(archived, warned)
-      return unless Config.report_channel_id
+      return if Config.report_channel_id.blank?
 
       unless archived.empty?
         log.info("Reporting on archived channels")
@@ -179,7 +179,7 @@ module Archivist
     memoize :not_monitored_channels
 
     def report_channels
-      return [] unless Config.report_channel_id
+      return [] if Config.report_channel_id.blank?
 
       all_channels.select { |channel| channel.id == Config.report_channel_id }
     end
@@ -201,7 +201,7 @@ module Archivist
         channel.is_shared ||
         channel.pending_shared&.any? ||
         (
-          Config.no_archive_label &&
+          Config.no_archive_label.present? &&
           channel.purpose&.value&.include?(Config.no_archive_label) ||
           channel.topic&.value&.include?(Config.no_archive_label)
         )
