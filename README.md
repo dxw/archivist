@@ -79,17 +79,6 @@ The available arguments are:
 
   `skip` overrides all other arguments.
 
-#### Create rule exceptions
-
-To create an exception to the rules and prevent a channel from being archived by
-the bot under any circumstances, you can specify a magic string via the
-`NO_ARCHIVE_LABEL` environment variable. If you set this environment variable,
-if a channel has its value in the description or topic, it will be ignored.
-
-Bear in mind that we look for it anywhere in the description or topic, including
-mid-sentence and mid-word, so be sure to use some form of delimeter to avoid
-false positives.
-
 ### Activity report
 
 Archivist can be configured to report the actions it took. To enable that

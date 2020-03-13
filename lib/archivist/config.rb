@@ -3,7 +3,6 @@ module Archivist
     class << self
       attr_reader(
         :slack_api_token,
-        :no_archive_label,
         :use_default_rules,
         :rules,
         :report_channel_id
@@ -12,7 +11,6 @@ module Archivist
       def configure
         @slack_api_token = ENV.fetch("ARCHIVIST_SLACK_API_TOKEN")
 
-        @no_archive_label = ENV.fetch("ARCHIVIST_NO_ARCHIVE_LABEL", "")
         @use_default_rules = ENV.fetch("ARCHIVIST_DISABLE_DEFAULTS", "").blank?
         @rules = parse_rules(ENV.fetch("ARCHIVIST_RULES", ""))
         @report_channel_id = ENV.fetch("ARCHIVIST_REPORT_CHANNEL_ID", "")

@@ -1,6 +1,5 @@
 describe Archivist::ArchiveChannels do
   let(:slack_client) { double(Slack::Web::Client) }
-  let(:no_archive_label) { "%noarchive" }
   let(:use_default_rules) { true }
   let(:rules) {
     [
@@ -68,24 +67,6 @@ describe Archivist::ArchiveChannels do
       pending_shared: ["other-team"]
     )
   }
-  let(:no_archive_description_channel) {
-    Slack::Messages::Message.new(
-      id: "no-archive-description-test-id",
-      name: "no-archive-description-test",
-      purpose: Slack::Messages::Message.new(
-        value: "A #{no_archive_label} description!"
-      )
-    )
-  }
-  let(:no_archive_topic_channel) {
-    Slack::Messages::Message.new(
-      id: "no-archive-topic-test-id",
-      name: "no-archive-topic-test",
-      topic: Slack::Messages::Message.new(
-        value: "A #{no_archive_label} topic!"
-      )
-    )
-  }
   let(:skip_channel) {
     Slack::Messages::Message.new(
       id: "skip-test-id",
@@ -110,8 +91,6 @@ describe Archivist::ArchiveChannels do
         channels: [
           shared_channel,
           pending_shared_channel,
-          no_archive_description_channel,
-          no_archive_topic_channel,
           skip_channel
         ]
       )
@@ -234,7 +213,6 @@ describe Archivist::ArchiveChannels do
     Archivist::Config.configure
 
     allow(Archivist::Config).to receive(:slack_api_token) { "test-api-token" }
-    allow(Archivist::Config).to receive(:no_archive_label) { no_archive_label }
     allow(Archivist::Config).to receive(:use_default_rules) {
       use_default_rules
     }
@@ -317,22 +295,6 @@ describe Archivist::ArchiveChannels do
       expect(slack_client)
         .not_to receive(:conversations_join)
         .with(channel: pending_shared_channel.id)
-
-      subject.run
-    end
-
-    it "doesn't join channels with the no archive label in their description" do
-      expect(slack_client)
-        .not_to receive(:conversations_join)
-        .with(channel: no_archive_description_channel.id)
-
-      subject.run
-    end
-
-    it "doesn't join channels with the no archive label in their topic" do
-      expect(slack_client)
-        .not_to receive(:conversations_join)
-        .with(channel: no_archive_topic_channel.id)
 
       subject.run
     end

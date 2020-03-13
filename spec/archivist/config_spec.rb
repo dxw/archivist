@@ -13,17 +13,6 @@ describe Archivist::Config do
       expect(subject.slack_api_token).to eq("test-api-token")
     end
 
-    it "populates the no archive label from the environment if one is set" do
-      old_label = ENV["ARCHIVIST_NO_ARCHIVE_LABEL"]
-      ENV["ARCHIVIST_NO_ARCHIVE_LABEL"] = "%test"
-
-      subject.configure
-
-      ENV["ARCHIVIST_NO_ARCHIVE_LABEL"] = old_label
-
-      expect(subject.no_archive_label).to eq("%test")
-    end
-
     it "sets whether to use the default rules based on the environment" do
       old_disable = ENV["ARCHIVIST_DISABLE_DEFAULTS"]
       ENV["ARCHIVIST_DISABLE_DEFAULTS"] = "anything"

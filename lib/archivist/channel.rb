@@ -85,17 +85,9 @@ module Archivist
     memoize :matching_rule
 
     def never_monitored?
-      general? || shared? || labeled_as_no_archive? || false
+      general? || shared? || false
     end
     memoize :never_monitored?
-
-    def labeled_as_no_archive?
-      Config.no_archive_label.present? &&
-        channel.purpose&.value&.include?(Config.no_archive_label) ||
-        channel.topic&.value&.include?(Config.no_archive_label) ||
-        false
-    end
-    memoize :labeled_as_no_archive?
 
     def stale?
       rule = Config.rules.detect { |rule| rule.match?(channel) }
