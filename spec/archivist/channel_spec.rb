@@ -153,25 +153,13 @@ describe Archivist::Channel do
           Slack::Messages::Message.new(
             subtype: "channel_leave",
             ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            hidden: true,
-            ts: Time.now.to_f.to_s
           )
         ]
       ),
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            bot_id: "testbotid",
+            hidden: true,
             ts: Time.now.to_f.to_s
           )
         ]

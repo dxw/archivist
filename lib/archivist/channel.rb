@@ -2,8 +2,8 @@ module Archivist
   class Channel
     extend Memoist
 
+    SLACKBOT_BOT_ID = "B01".freeze
     IGNORED_MESSAGE_TYPES = %w[
-      bot_message
       channel_join
       channel_leave
       message_deleted
@@ -119,8 +119,8 @@ module Archivist
       !warned?
     end
 
-    def has_recent_real_messages?(max_days_ago: nil)
-      log.info("Checking ##{ENV["CI"] ? id : name} for real messages...")
+    def has_recent_messages?(max_days_ago: nil)
+      log.info("Checking ##{ENV["CI"] ? id : name} for messages...")
 
       Client.last_messages_in(
         channel,
@@ -128,24 +128,29 @@ module Archivist
       ) do |response|
         real_messages = response.messages.reject { |message|
           message.hidden ||
-            message.bot_id ||
-            IGNORED_MESSAGE_TYPES.include?(message.subtype)
+            message.bot_id == SLACKBOT_BOT_ID ||
+            IGNORED_MESSAGE_TYPES.include?(message.subtype) ||
+            (
+              (message.subtype == "bot_message" || message.bot_id) &&
+              message.blocks &&
+              message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
+            )
         }
 
         if real_messages.any?
-          log.info("   ...found real messages")
+          log.info("   ...found messages")
 
           return true
         end
       end
 
-      log.info("   ...no real messages found")
+      log.info("   ...no messages found")
 
       false
     end
 
     def has_no_recent_real_messages?(max_days_ago: nil)
-      !has_recent_real_messages?(max_days_ago: max_days_ago)
+      !has_recent_messages?(max_days_ago: max_days_ago)
     end
 
     def has_warning_message?(min_days_ago: nil, max_days_ago: nil)

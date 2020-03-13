@@ -151,7 +151,7 @@ describe Archivist::ArchiveChannels do
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "bot_message",
+            bot_id: "testbotid",
             ts: Time.now.to_f.to_s
           )
         ]
@@ -171,7 +171,7 @@ describe Archivist::ArchiveChannels do
             ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
-            subtype: "bot_message",
+            bot_id: Archivist::Channel::SLACKBOT_BOT_ID,
             ts: Time.now.to_f.to_s
           ),
           Slack::Messages::Message.new(
@@ -183,11 +183,7 @@ describe Archivist::ArchiveChannels do
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            bot_id: "testbotid",
+            bot_id: Archivist::Channel::SLACKBOT_BOT_ID,
             ts: Time.now.to_f.to_s
           )
         ]
@@ -205,7 +201,7 @@ describe Archivist::ArchiveChannels do
             blocks: [
               Slack::Messages::Message.new(block_id: "archivist-warn-1234")
             ],
-            bot_id: "testbotid",
+            bot_id: Archivist::Channel::SLACKBOT_BOT_ID,
             ts: Time.now.to_f.to_s
           )
         ]
@@ -220,7 +216,7 @@ describe Archivist::ArchiveChannels do
             blocks: [
               Slack::Messages::Message.new(block_id: "archivist-warn-1234")
             ],
-            bot_id: "testbotid",
+            bot_id: Archivist::Channel::SLACKBOT_BOT_ID,
             ts: Time.now.to_f.to_s
           )
         ]

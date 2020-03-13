@@ -41,8 +41,8 @@ channel action. If the channel is still stale after ~7 days, the channel is
 archived.
 
 In this case "real" messages or chat actions are messages visible to anyone in
-the channel that weren't sent by a bot user, except for notifications about
-users joining or leaving the channel.
+the channel that weren't sent by Slackbot, except for notifications about users
+joining or leaving the channel.
 
 ##### Disable defaults
 
