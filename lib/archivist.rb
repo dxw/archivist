@@ -4,9 +4,10 @@ require "securerandom"
 require "slack-ruby-client"
 
 require "archivist/config"
-require "archivist/client"
 
 require "archivist/archive_channels"
+require "archivist/channel"
+require "archivist/client"
 require "archivist/rule"
 
 module Archivist
