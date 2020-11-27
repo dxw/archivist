@@ -53,7 +53,7 @@ module Archivist
       channels.each do |channel|
         next unless channel.member?
 
-        log.info("Leaving ##{channel.name}")
+        log.info("Leaving ##{ENV["CI"] ? channel.id : channel.name}")
 
         Client.leave(channel)
       end
@@ -67,7 +67,7 @@ module Archivist
       channels.each do |channel|
         next if channel.member?
 
-        log.info("Joining ##{channel.name}")
+        log.info("Joining ##{ENV["CI"] ? channel.id : channel.name}")
 
         Client.join(channel)
       end
@@ -83,7 +83,7 @@ module Archivist
         blocks[0][:block_id] =
           "#{Channel::WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
 
-        log.info("Warning ##{channel.name}")
+        log.info("Warning ##{ENV["CI"] ? channel.id : channel.name}")
 
         Client.post_to(channel, blocks: blocks)
       end
@@ -97,7 +97,7 @@ module Archivist
       }
 
       channels.each do |channel|
-        log.info("Archiving ##{channel.name}")
+        log.info("Archiving ##{ENV["CI"] ? channel.id : channel.name}")
 
         Client.archive(channel)
       end

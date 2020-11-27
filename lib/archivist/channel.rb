@@ -120,7 +120,7 @@ module Archivist
     end
 
     def has_recent_real_messages?(max_days_ago: nil)
-      log.info("Checking ##{channel.name} for real messages...")
+      log.info("Checking ##{ENV["CI"] ? id : name} for real messages...")
 
       Client.last_messages_in(
         channel,
@@ -149,7 +149,7 @@ module Archivist
     end
 
     def has_warning_message?(min_days_ago: nil, max_days_ago: nil)
-      log.info("Checking ##{channel.name} for recent warning messages...")
+      log.info("Checking ##{ENV["CI"] ? id : name} for recent warning messages...")
 
       Client.last_messages_in(
         channel,
