@@ -1,5 +1,4 @@
 describe Archivist::Channel do
-  let(:no_archive_label) { "%noarchive" }
   let(:use_default_rules) { true }
 
   let(:active_channel) {
@@ -70,28 +69,6 @@ describe Archivist::Channel do
       )
     )
   }
-  let(:no_archive_description_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "no-archive-description-test-id",
-        name: "no-archive-description-test",
-        purpose: Slack::Messages::Message.new(
-          value: "A #{no_archive_label} description!"
-        )
-      )
-    )
-  }
-  let(:no_archive_topic_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "no-archive-topic-test-id",
-        name: "no-archive-topic-test",
-        topic: Slack::Messages::Message.new(
-          value: "A #{no_archive_label} topic!"
-        )
-      )
-    )
-  }
   let(:skip_channel) {
     Archivist::Channel.new(
       Slack::Messages::Message.new(
@@ -153,25 +130,13 @@ describe Archivist::Channel do
           Slack::Messages::Message.new(
             subtype: "channel_leave",
             ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            hidden: true,
-            ts: Time.now.to_f.to_s
           )
         ]
       ),
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            bot_id: "testbotid",
+            hidden: true,
             ts: Time.now.to_f.to_s
           )
         ]
@@ -216,7 +181,6 @@ describe Archivist::Channel do
     Archivist::Config.configure
 
     allow(Archivist::Config).to receive(:slack_api_token) { "test-api-token" }
-    allow(Archivist::Config).to receive(:no_archive_label) { no_archive_label }
     allow(Archivist::Config).to receive(:use_default_rules) {
       use_default_rules
     }
@@ -297,8 +261,6 @@ describe Archivist::Channel do
         expect(general_channel.monitored?).to eq(false)
         expect(shared_channel.monitored?).to eq(false)
         expect(pending_shared_channel.monitored?).to eq(false)
-        expect(no_archive_description_channel.monitored?).to eq(false)
-        expect(no_archive_topic_channel.monitored?).to eq(false)
         expect(skip_channel.monitored?).to eq(false)
       end
     end
@@ -317,8 +279,6 @@ describe Archivist::Channel do
         expect(general_channel.monitored?).to eq(false)
         expect(shared_channel.monitored?).to eq(false)
         expect(pending_shared_channel.monitored?).to eq(false)
-        expect(no_archive_description_channel.monitored?).to eq(false)
-        expect(no_archive_topic_channel.monitored?).to eq(false)
         expect(skip_channel.monitored?).to eq(false)
       end
     end
@@ -339,8 +299,6 @@ describe Archivist::Channel do
         expect(general_channel.not_monitored?).to eq(true)
         expect(shared_channel.not_monitored?).to eq(true)
         expect(pending_shared_channel.not_monitored?).to eq(true)
-        expect(no_archive_description_channel.not_monitored?).to eq(true)
-        expect(no_archive_topic_channel.not_monitored?).to eq(true)
         expect(skip_channel.not_monitored?).to eq(true)
       end
     end
@@ -359,8 +317,6 @@ describe Archivist::Channel do
         expect(general_channel.not_monitored?).to eq(true)
         expect(shared_channel.not_monitored?).to eq(true)
         expect(pending_shared_channel.not_monitored?).to eq(true)
-        expect(no_archive_description_channel.not_monitored?).to eq(true)
-        expect(no_archive_topic_channel.not_monitored?).to eq(true)
         expect(skip_channel.not_monitored?).to eq(true)
       end
     end
@@ -390,8 +346,6 @@ describe Archivist::Channel do
         expect(general_channel.warnable?).to eq(false)
         expect(shared_channel.warnable?).to eq(false)
         expect(pending_shared_channel.warnable?).to eq(false)
-        expect(no_archive_description_channel.warnable?).to eq(false)
-        expect(no_archive_topic_channel.warnable?).to eq(false)
         expect(skip_channel.warnable?).to eq(false)
       end
     end
@@ -420,8 +374,6 @@ describe Archivist::Channel do
         expect(general_channel.warnable?).to eq(false)
         expect(shared_channel.warnable?).to eq(false)
         expect(pending_shared_channel.warnable?).to eq(false)
-        expect(no_archive_description_channel.warnable?).to eq(false)
-        expect(no_archive_topic_channel.warnable?).to eq(false)
         expect(skip_channel.warnable?).to eq(false)
       end
     end
@@ -451,8 +403,6 @@ describe Archivist::Channel do
         expect(general_channel.archivable?).to eq(false)
         expect(shared_channel.archivable?).to eq(false)
         expect(pending_shared_channel.archivable?).to eq(false)
-        expect(no_archive_description_channel.archivable?).to eq(false)
-        expect(no_archive_topic_channel.archivable?).to eq(false)
         expect(skip_channel.archivable?).to eq(false)
       end
     end
@@ -481,8 +431,6 @@ describe Archivist::Channel do
         expect(general_channel.archivable?).to eq(false)
         expect(shared_channel.archivable?).to eq(false)
         expect(pending_shared_channel.archivable?).to eq(false)
-        expect(no_archive_description_channel.archivable?).to eq(false)
-        expect(no_archive_topic_channel.archivable?).to eq(false)
         expect(skip_channel.archivable?).to eq(false)
       end
     end

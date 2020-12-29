@@ -41,8 +41,8 @@ channel action. If the channel is still stale after ~7 days, the channel is
 archived.
 
 In this case "real" messages or chat actions are messages visible to anyone in
-the channel that weren't sent by a bot user, except for notifications about
-users joining or leaving the channel.
+the channel that weren't sent by Slackbot, except for notifications about users
+joining or leaving the channel.
 
 ##### Disable defaults
 
@@ -78,17 +78,6 @@ The available arguments are:
   excluded.
 
   `skip` overrides all other arguments.
-
-#### Create rule exceptions
-
-To create an exception to the rules and prevent a channel from being archived by
-the bot under any circumstances, you can specify a magic string via the
-`NO_ARCHIVE_LABEL` environment variable. If you set this environment variable,
-if a channel has its value in the description or topic, it will be ignored.
-
-Bear in mind that we look for it anywhere in the description or topic, including
-mid-sentence and mid-word, so be sure to use some form of delimeter to avoid
-false positives.
 
 ### Activity report
 

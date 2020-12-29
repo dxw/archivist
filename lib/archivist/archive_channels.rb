@@ -12,10 +12,7 @@ module Archivist
         type: "section",
         text: {
           type: "mrkdwn",
-          text:
-            Config.no_archive_label.present? ?
-              "If this is unexpected and unwanted and you want to ask me to ignore it in future, add `#{Config.no_archive_label}` to the channel's description or topic and I will. If it's just too soon, but you don't want me to ignore the channel entirely, continue to use it (send a message) and I'll check again later." :
-              "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later."
+          text: "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later."
         }
       },
       {
