@@ -4,7 +4,7 @@ describe Archivist::Client do
   let(:channel) {
     Slack::Messages::Message.new(
       id: "test-id",
-      name: "test",
+      name: "test"
     )
   }
 
@@ -14,9 +14,9 @@ describe Archivist::Client do
         type: "section",
         text: {
           type: "plain_text",
-          text: "Some words",
-        },
-      },
+          text: "Some words"
+        }
+      }
     ]
   }
 
