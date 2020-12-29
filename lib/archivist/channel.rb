@@ -20,7 +20,7 @@ module Archivist
 
     def initialize(channel)
       @channel = channel
-      @log = Logger.new(STDOUT)
+      @log = Logger.new($stdout)
     end
 
     def id

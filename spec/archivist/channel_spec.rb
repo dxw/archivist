@@ -7,7 +7,7 @@ describe Archivist::Channel do
       Slack::Messages::Message.new(
         id: "active-test-id",
         name: "active-test",
-        is_member: true,
+        is_member: true
       )
     )
   }
@@ -15,7 +15,7 @@ describe Archivist::Channel do
     Archivist::Channel.new(
       Slack::Messages::Message.new(
         id: "included-active-test-id",
-        name: "included-active-test",
+        name: "included-active-test"
       )
     )
   }
@@ -23,7 +23,7 @@ describe Archivist::Channel do
     Archivist::Channel.new(
       Slack::Messages::Message.new(
         id: "stale-test-id",
-        name: "stale-test",
+        name: "stale-test"
       )
     )
   }
@@ -31,7 +31,7 @@ describe Archivist::Channel do
     Archivist::Channel.new(
       Slack::Messages::Message.new(
         id: "warned-active-test-id",
-        name: "warned-active-test",
+        name: "warned-active-test"
       )
     )
   }
@@ -39,7 +39,7 @@ describe Archivist::Channel do
     Archivist::Channel.new(
       Slack::Messages::Message.new(
         id: "warned-stale-test-id",
-        name: "warned-stale-test",
+        name: "warned-stale-test"
       )
     )
   }
@@ -48,7 +48,7 @@ describe Archivist::Channel do
       Slack::Messages::Message.new(
         id: "general-test-id",
         name: "general-test",
-        is_general: true,
+        is_general: true
       )
     )
   }
@@ -57,7 +57,7 @@ describe Archivist::Channel do
       Slack::Messages::Message.new(
         id: "shared-test-id",
         name: "shared-test",
-        is_shared: true,
+        is_shared: true
       )
     )
   }
@@ -96,7 +96,7 @@ describe Archivist::Channel do
     Archivist::Channel.new(
       Slack::Messages::Message.new(
         id: "skip-test-id",
-        name: "skip-test",
+        name: "skip-test"
       )
     )
   }
@@ -129,7 +129,7 @@ describe Archivist::Channel do
           Slack::Messages::Message.new(
             hidden: true,
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
       ),
       Slack::Messages::Message.new(
@@ -137,9 +137,9 @@ describe Archivist::Channel do
           Slack::Messages::Message.new(
             subtype: "bot_message",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
   let(:stale_conversations_history_responses) {
@@ -161,7 +161,7 @@ describe Archivist::Channel do
           Slack::Messages::Message.new(
             hidden: true,
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
       ),
       Slack::Messages::Message.new(
@@ -173,9 +173,9 @@ describe Archivist::Channel do
           Slack::Messages::Message.new(
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
   let(:warned_active_conversations_history_responses) {
@@ -187,13 +187,13 @@ describe Archivist::Channel do
           ),
           Slack::Messages::Message.new(
             blocks: [
-              Slack::Messages::Message.new(block_id: "archivist-warn-1234"),
+              Slack::Messages::Message.new(block_id: "archivist-warn-1234")
             ],
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
   let(:warned_stale_conversations_history_responses) {
@@ -202,13 +202,13 @@ describe Archivist::Channel do
         messages: [
           Slack::Messages::Message.new(
             blocks: [
-              Slack::Messages::Message.new(block_id: "archivist-warn-1234"),
+              Slack::Messages::Message.new(block_id: "archivist-warn-1234")
             ],
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
 
@@ -225,7 +225,7 @@ describe Archivist::Channel do
         Archivist::Rule.new("included-", days: 123),
         Archivist::Rule.new("stale-", days: 123),
         Archivist::Rule.new("warned-", days: 123),
-        Archivist::Rule.new("skip-", skip: true),
+        Archivist::Rule.new("skip-", skip: true)
       ]
     }
 

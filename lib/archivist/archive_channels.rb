@@ -5,8 +5,8 @@ module Archivist
         type: "section",
         text: {
           type: "mrkdwn",
-          text: ":warning: *This channel will be archived soon due to lack of activity!* :warning:",
-        },
+          text: ":warning: *This channel will be archived soon due to lack of activity!* :warning:"
+        }
       },
       {
         type: "section",
@@ -15,22 +15,22 @@ module Archivist
           text:
             Config.no_archive_label.present? ?
               "If this is unexpected and unwanted and you want to ask me to ignore it in future, add `#{Config.no_archive_label}` to the channel's description or topic and I will. If it's just too soon, but you don't want me to ignore the channel entirely, continue to use it (send a message) and I'll check again later." :
-              "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later.",
-        },
+              "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later."
+        }
       },
       {
         type: "section",
         text: {
           type: "plain_text",
-          text: "If the rules are wrong or need updating, you might need to modify my configuration. Let my maintainers for your workspace know!",
-        },
-      },
+          text: "If the rules are wrong or need updating, you might need to modify my configuration. Let my maintainers for your workspace know!"
+        }
+      }
     ].freeze
 
     attr_reader :log
 
     def initialize
-      @log = Logger.new(STDOUT)
+      @log = Logger.new($stdout)
     end
 
     def run
@@ -118,16 +118,16 @@ module Archivist
               type: "section",
               text: {
                 type: "plain_text",
-                text: "I have archived the following inactive channels:",
-              },
+                text: "I have archived the following inactive channels:"
+              }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: archived.map { |channel| ":file_folder: ##{channel.name}" }.join("\n"),
-              },
-            },
+                text: archived.map { |channel| ":file_folder: ##{channel.name}" }.join("\n")
+              }
+            }
           ]
         )
       end
@@ -142,16 +142,16 @@ module Archivist
               type: "section",
               text: {
                 type: "plain_text",
-                text: "I will archive the following channels in a week if they remain inactive:",
-              },
+                text: "I will archive the following channels in a week if they remain inactive:"
+              }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: warned.map { |channel| ":open_file_folder: ##{channel.name}" }.join("\n"),
-              },
-            },
+                text: warned.map { |channel| ":open_file_folder: ##{channel.name}" }.join("\n")
+              }
+            }
           ]
         )
       end

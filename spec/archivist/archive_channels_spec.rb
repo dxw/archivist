@@ -6,59 +6,59 @@ describe Archivist::ArchiveChannels do
     [
       Archivist::Rule.new("stale-", days: 123),
       Archivist::Rule.new("warned-", days: 123),
-      Archivist::Rule.new("skip-", skip: true),
+      Archivist::Rule.new("skip-", skip: true)
     ]
   }
 
   let(:report_channel) {
     Slack::Messages::Message.new(
       id: "report-test-id",
-      name: "report-test",
+      name: "report-test"
     )
   }
   let(:active_channel) {
     Slack::Messages::Message.new(
       id: "active-test-id",
-      name: "active-test",
+      name: "active-test"
     )
   }
   let(:stale_channel) {
     Slack::Messages::Message.new(
       id: "stale-test-id",
-      name: "stale-test",
+      name: "stale-test"
     )
   }
   let(:warned_active_channel) {
     Slack::Messages::Message.new(
       id: "warned-active-test-id",
-      name: "warned-active-test",
+      name: "warned-active-test"
     )
   }
   let(:warned_stale_channel) {
     Slack::Messages::Message.new(
       id: "warned-stale-test-id",
-      name: "warned-stale-test",
+      name: "warned-stale-test"
     )
   }
   let(:member_channel) {
     Slack::Messages::Message.new(
       id: "member-test-id",
       name: "member-test",
-      is_member: true,
+      is_member: true
     )
   }
   let(:general_channel) {
     Slack::Messages::Message.new(
       id: "general-test-id",
       name: "general-test",
-      is_general: true,
+      is_general: true
     )
   }
   let(:shared_channel) {
     Slack::Messages::Message.new(
       id: "shared-test-id",
       name: "shared-test",
-      is_shared: true,
+      is_shared: true
     )
   }
   let(:pending_shared_channel) {
@@ -89,7 +89,7 @@ describe Archivist::ArchiveChannels do
   let(:skip_channel) {
     Slack::Messages::Message.new(
       id: "skip-test-id",
-      name: "skip-test",
+      name: "skip-test"
     )
   }
 
@@ -103,7 +103,7 @@ describe Archivist::ArchiveChannels do
           warned_active_channel,
           warned_stale_channel,
           member_channel,
-          general_channel,
+          general_channel
         ]
       ),
       Slack::Messages::Message.new(
@@ -112,9 +112,9 @@ describe Archivist::ArchiveChannels do
           pending_shared_channel,
           no_archive_description_channel,
           no_archive_topic_channel,
-          skip_channel,
+          skip_channel
         ]
-      ),
+      )
     ]
   }
   let(:active_conversations_history_responses) {
@@ -145,7 +145,7 @@ describe Archivist::ArchiveChannels do
           Slack::Messages::Message.new(
             hidden: true,
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
       ),
       Slack::Messages::Message.new(
@@ -153,9 +153,9 @@ describe Archivist::ArchiveChannels do
           Slack::Messages::Message.new(
             subtype: "bot_message",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
   let(:stale_conversations_history_responses) {
@@ -177,7 +177,7 @@ describe Archivist::ArchiveChannels do
           Slack::Messages::Message.new(
             hidden: true,
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
       ),
       Slack::Messages::Message.new(
@@ -189,9 +189,9 @@ describe Archivist::ArchiveChannels do
           Slack::Messages::Message.new(
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
   let(:warned_active_conversations_history_responses) {
@@ -203,13 +203,13 @@ describe Archivist::ArchiveChannels do
           ),
           Slack::Messages::Message.new(
             blocks: [
-              Slack::Messages::Message.new(block_id: "archivist-warn-1234"),
+              Slack::Messages::Message.new(block_id: "archivist-warn-1234")
             ],
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
   let(:warned_stale_conversations_history_responses) {
@@ -218,13 +218,13 @@ describe Archivist::ArchiveChannels do
         messages: [
           Slack::Messages::Message.new(
             blocks: [
-              Slack::Messages::Message.new(block_id: "archivist-warn-1234"),
+              Slack::Messages::Message.new(block_id: "archivist-warn-1234")
             ],
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
-          ),
+          )
         ]
-      ),
+      )
     ]
   }
 
@@ -472,16 +472,16 @@ describe Archivist::ArchiveChannels do
               type: "section",
               text: {
                 type: "plain_text",
-                text: "I have archived the following inactive channels:",
-              },
+                text: "I have archived the following inactive channels:"
+              }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: ":file_folder: #warned-stale-test",
-              },
-            },
+                text: ":file_folder: #warned-stale-test"
+              }
+            }
           ]
         )
       expect(slack_client)
@@ -493,16 +493,16 @@ describe Archivist::ArchiveChannels do
               type: "section",
               text: {
                 type: "plain_text",
-                text: "I will archive the following channels in a week if they remain inactive:",
-              },
+                text: "I will archive the following channels in a week if they remain inactive:"
+              }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: ":open_file_folder: #stale-test",
-              },
-            },
+                text: ":open_file_folder: #stale-test"
+              }
+            }
           ]
         )
 
@@ -633,16 +633,16 @@ describe Archivist::ArchiveChannels do
               type: "section",
               text: {
                 type: "plain_text",
-                text: "I have archived the following inactive channels:",
-              },
+                text: "I have archived the following inactive channels:"
+              }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: ":file_folder: #warned-stale-test",
-              },
-            },
+                text: ":file_folder: #warned-stale-test"
+              }
+            }
           ]
         )
       expect(slack_client)
@@ -654,16 +654,16 @@ describe Archivist::ArchiveChannels do
               type: "section",
               text: {
                 type: "plain_text",
-                text: "I will archive the following channels in a week if they remain inactive:",
-              },
+                text: "I will archive the following channels in a week if they remain inactive:"
+              }
             },
             {
               type: "section",
               text: {
                 type: "mrkdwn",
-                text: ":open_file_folder: #stale-test",
-              },
-            },
+                text: ":open_file_folder: #stale-test"
+              }
+            }
           ]
         )
 
