@@ -67,7 +67,7 @@ GEM
       rubocop-ast (>= 0.4.0)
     ruby-progressbar (1.11.0)
     ruby2_keywords (0.0.4)
-    slack-ruby-client (0.16.0)
+    slack-ruby-client (0.17.0)
       faraday (>= 1.0)
       faraday_middleware
       gli
