@@ -99,8 +99,8 @@ describe Archivist::Client do
         .with(
           channel: channel.id,
           limit: 123,
-          latest: Date.today - 12,
-          oldest: Date.today - 23,
+          latest: (Date.today - 12).to_time.to_i,
+          oldest: (Date.today - 23).to_time.to_i,
           sleep_interval: 1
         )
 
