@@ -314,8 +314,8 @@ describe Archivist::ArchiveChannels do
           .with(
             channel: active_channel.id,
             limit: nil,
-            latest: Time.now,
-            oldest: Date.today - 30,
+            latest: Time.now.to_i,
+            oldest: (Date.today - 30).to_time.to_i,
             sleep_interval: 1
           )
 
@@ -330,8 +330,8 @@ describe Archivist::ArchiveChannels do
           .with(
             channel: stale_channel.id,
             limit: nil,
-            latest: Time.now,
-            oldest: Date.today - rules[0].days,
+            latest: Time.now.to_i,
+            oldest: (Date.today - rules[0].days).to_time.to_i,
             sleep_interval: 1
           )
 

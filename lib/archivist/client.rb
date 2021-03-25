@@ -57,8 +57,8 @@ module Archivist
           channel: channel.id,
           limit: limit,
           # Providing `latest` means the history is fetched most recent first.
-          latest: min_days_ago.nil? ? Time.now : (Date.today - min_days_ago),
-          oldest: max_days_ago && Date.today - max_days_ago,
+          latest: min_days_ago.nil? ? Time.now.to_i : (Date.today - min_days_ago).to_time.to_i,
+          oldest: max_days_ago && (Date.today - max_days_ago).to_time.to_i,
 
           # Client configuration
           sleep_interval: 1,
