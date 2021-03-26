@@ -1,12 +1,7 @@
 module Archivist
   class Config
     class << self
-      attr_reader(
-        :slack_api_token,
-        :use_default_rules,
-        :rules,
-        :report_channel_id
-      )
+      attr_reader(:slack_api_token, :use_default_rules, :rules, :report_channel_id)
 
       def configure
         @slack_api_token = ENV.fetch("ARCHIVIST_SLACK_API_TOKEN")
@@ -23,30 +18,24 @@ module Archivist
       def parse_rules(rule_definitions)
         return [] if rule_definitions.blank?
 
-        rules = rule_definitions
-          .split(";")
-          .map(&:strip)
-          .map { |rule_definition|
-            arguments = rule_definition
-              .split(",")
-              .map(&:strip)
-              .map { |argument| argument.split("=").map(&:strip) }
-              .to_h
+        rules =
+          rule_definitions
+            .split(";")
+            .map(&:strip)
+            .map do |rule_definition|
+              arguments =
+                rule_definition.split(",").map(&:strip).map { |argument| argument.split("=").map(&:strip) }.to_h
 
-            Rule.new(
-              arguments.fetch("prefix"),
-              days: arguments.fetch("days", "").to_i,
-              skip: arguments.fetch("skip", "false") == "true"
-            )
-          }
+              Rule.new(
+                arguments.fetch("prefix"),
+                days: arguments.fetch("days", "").to_i,
+                skip: arguments.fetch("skip", "false") == "true"
+              )
+            end
 
-        overlapping_rules = rules.select { |rule|
-          rules.any? { |r| r != rule && rule.overlap?(r) }
-        }
+        overlapping_rules = rules.select { |rule| rules.any? { |r| r != rule && rule.overlap?(r) } }
 
-        if overlapping_rules.any?
-          raise "The following rules overlap: #{overlapping_rules.map(&:prefix).join(", ")}"
-        end
+        raise "The following rules overlap: #{overlapping_rules.map(&:prefix).join(", ")}" if overlapping_rules.any?
 
         rules
       end

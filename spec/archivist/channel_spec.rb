@@ -1,66 +1,26 @@
 describe Archivist::Channel do
   let(:use_default_rules) { true }
 
-  let(:active_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "active-test-id",
-        name: "active-test",
-        is_member: true
-      )
-    )
-  }
-  let(:included_active_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "included-active-test-id",
-        name: "included-active-test"
-      )
-    )
-  }
-  let(:stale_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "stale-test-id",
-        name: "stale-test"
-      )
-    )
-  }
-  let(:warned_active_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "warned-active-test-id",
-        name: "warned-active-test"
-      )
-    )
-  }
-  let(:warned_stale_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "warned-stale-test-id",
-        name: "warned-stale-test"
-      )
-    )
-  }
-  let(:general_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "general-test-id",
-        name: "general-test",
-        is_general: true
-      )
-    )
-  }
-  let(:shared_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "shared-test-id",
-        name: "shared-test",
-        is_shared: true
-      )
-    )
-  }
-  let(:pending_shared_channel) {
+  let(:active_channel) do
+    Archivist::Channel.new(Slack::Messages::Message.new(id: "active-test-id", name: "active-test", is_member: true))
+  end
+  let(:included_active_channel) do
+    Archivist::Channel.new(Slack::Messages::Message.new(id: "included-active-test-id", name: "included-active-test"))
+  end
+  let(:stale_channel) { Archivist::Channel.new(Slack::Messages::Message.new(id: "stale-test-id", name: "stale-test")) }
+  let(:warned_active_channel) do
+    Archivist::Channel.new(Slack::Messages::Message.new(id: "warned-active-test-id", name: "warned-active-test"))
+  end
+  let(:warned_stale_channel) do
+    Archivist::Channel.new(Slack::Messages::Message.new(id: "warned-stale-test-id", name: "warned-stale-test"))
+  end
+  let(:general_channel) do
+    Archivist::Channel.new(Slack::Messages::Message.new(id: "general-test-id", name: "general-test", is_general: true))
+  end
+  let(:shared_channel) do
+    Archivist::Channel.new(Slack::Messages::Message.new(id: "shared-test-id", name: "shared-test", is_shared: true))
+  end
+  let(:pending_shared_channel) do
     Archivist::Channel.new(
       Slack::Messages::Message.new(
         id: "pending-shared-test-id",
@@ -68,122 +28,71 @@ describe Archivist::Channel do
         pending_shared: ["other-team"]
       )
     )
-  }
-  let(:skip_channel) {
-    Archivist::Channel.new(
-      Slack::Messages::Message.new(
-        id: "skip-test-id",
-        name: "skip-test"
-      )
-    )
-  }
+  end
+  let(:skip_channel) { Archivist::Channel.new(Slack::Messages::Message.new(id: "skip-test-id", name: "skip-test")) }
 
-  let(:active_conversations_history_responses) {
+  let(:active_conversations_history_responses) do
     [
       Slack::Messages::Message.new(
         messages: [
-          Slack::Messages::Message.new(
-            subtype: "channel_join",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            subtype: "channel_leave",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            hidden: true,
-            ts: Time.now.to_f.to_s
-          )
+          Slack::Messages::Message.new(subtype: "channel_join", ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(subtype: "channel_leave", ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(subtype: "bot_message", ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(hidden: true, ts: Time.now.to_f.to_s)
         ]
       ),
       Slack::Messages::Message.new(
-        messages: [
-          Slack::Messages::Message.new(
-            subtype: "bot_message",
-            ts: Time.now.to_f.to_s
-          )
-        ]
+        messages: [Slack::Messages::Message.new(subtype: "bot_message", ts: Time.now.to_f.to_s)]
       )
     ]
-  }
-  let(:stale_conversations_history_responses) {
+  end
+  let(:stale_conversations_history_responses) do
     [
       Slack::Messages::Message.new(
         messages: [
-          Slack::Messages::Message.new(
-            subtype: "channel_join",
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            subtype: "channel_leave",
-            ts: Time.now.to_f.to_s
-          )
+          Slack::Messages::Message.new(subtype: "channel_join", ts: Time.now.to_f.to_s),
+          Slack::Messages::Message.new(subtype: "channel_leave", ts: Time.now.to_f.to_s)
         ]
       ),
-      Slack::Messages::Message.new(
-        messages: [
-          Slack::Messages::Message.new(
-            hidden: true,
-            ts: Time.now.to_f.to_s
-          )
-        ]
-      )
+      Slack::Messages::Message.new(messages: [Slack::Messages::Message.new(hidden: true, ts: Time.now.to_f.to_s)])
     ]
-  }
-  let(:warned_active_conversations_history_responses) {
+  end
+  let(:warned_active_conversations_history_responses) do
     [
       Slack::Messages::Message.new(
         messages: [
+          Slack::Messages::Message.new(ts: Time.now.to_f.to_s),
           Slack::Messages::Message.new(
-            ts: Time.now.to_f.to_s
-          ),
-          Slack::Messages::Message.new(
-            blocks: [
-              Slack::Messages::Message.new(block_id: "archivist-warn-1234")
-            ],
+            blocks: [Slack::Messages::Message.new(block_id: "archivist-warn-1234")],
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
           )
         ]
       )
     ]
-  }
-  let(:warned_stale_conversations_history_responses) {
+  end
+  let(:warned_stale_conversations_history_responses) do
     [
       Slack::Messages::Message.new(
         messages: [
           Slack::Messages::Message.new(
-            blocks: [
-              Slack::Messages::Message.new(block_id: "archivist-warn-1234")
-            ],
+            blocks: [Slack::Messages::Message.new(block_id: "archivist-warn-1234")],
             bot_id: "testbotid",
             ts: Time.now.to_f.to_s
           )
         ]
       )
     ]
-  }
+  end
 
   before do
     Archivist::Config.configure
 
     allow(Archivist::Config).to receive(:slack_api_token) { "test-api-token" }
-    allow(Archivist::Config).to receive(:use_default_rules) {
-      use_default_rules
-    }
+    allow(Archivist::Config).to receive(:use_default_rules) { use_default_rules }
     allow(Archivist::Config).to receive(:rules) {
       [
         Archivist::Rule.new("included-", days: 123),
@@ -195,19 +104,18 @@ describe Archivist::Channel do
 
     Archivist::Client.configure
 
-    allow(Archivist::Client)
-      .to receive(:last_messages_in) { |channel, params, &block|
-        case channel.id
-        when stale_channel.id
-          next stale_conversations_history_responses.each(&block)
-        when warned_active_channel.id
-          next warned_active_conversations_history_responses.each(&block)
-        when warned_stale_channel.id
-          next warned_stale_conversations_history_responses.each(&block)
-        else
-          next active_conversations_history_responses.each(&block)
-        end
-      }
+    allow(Archivist::Client).to receive(:last_messages_in) { |channel, params, &block|
+      case channel.id
+      when stale_channel.id
+        next stale_conversations_history_responses.each(&block)
+      when warned_active_channel.id
+        next warned_active_conversations_history_responses.each(&block)
+      when warned_stale_channel.id
+        next warned_stale_conversations_history_responses.each(&block)
+      else
+        next active_conversations_history_responses.each(&block)
+      end
+    }
 
     allow(SecureRandom).to receive(:uuid) { "1234" }
   end
