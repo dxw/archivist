@@ -3,13 +3,10 @@ module Archivist
     extend Memoist
 
     SLACKBOT_BOT_ID = "B01".freeze
-    IGNORED_MESSAGE_TYPES = %w[
-      channel_join
-      channel_leave
-      message_deleted
-    ].freeze
+    IGNORED_MESSAGE_TYPES = %w[channel_join channel_leave message_deleted].freeze
 
     DEFAULT_ARCHIVABLE_DAYS = 30
+
     # This is one day less than the cycle length to allow for fuzziness in
     # run times.
     DAYS_AFTER_WARNING_BEFORE_ARCHIVING = 6
@@ -114,20 +111,15 @@ module Archivist
     def has_recent_messages?(max_days_ago: nil)
       log.info("Checking ##{ENV["CI"] ? id : name} for messages...")
 
-      Client.last_messages_in(
-        channel,
-        max_days_ago: max_days_ago || DEFAULT_ARCHIVABLE_DAYS
-      ) do |response|
-        real_messages = response.messages.reject { |message|
-          message.hidden ||
-            message.bot_id == SLACKBOT_BOT_ID ||
-            IGNORED_MESSAGE_TYPES.include?(message.subtype) ||
-            (
-              (message.subtype == "bot_message" || message.bot_id) &&
-              message.blocks &&
-              message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
-            )
-        }
+      Client.last_messages_in(channel, max_days_ago: max_days_ago || DEFAULT_ARCHIVABLE_DAYS) do |response|
+        real_messages =
+          response.messages.reject do |message|
+            message.hidden || message.bot_id == SLACKBOT_BOT_ID || IGNORED_MESSAGE_TYPES.include?(message.subtype) ||
+              (
+                (message.subtype == "bot_message" || message.bot_id) && message.blocks &&
+                  message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
+              )
+          end
 
         if real_messages.any?
           log.info("   ...found messages")
@@ -157,11 +149,11 @@ module Archivist
         min_days_ago: min_days_ago,
         max_days_ago: max_days_ago
       ) do |response|
-        warning_message = response.messages.detect { |message|
-          (message.subtype == "bot_message" || message.bot_id) &&
-            message.blocks &&
-            message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
-        }
+        warning_message =
+          response.messages.detect do |message|
+            (message.subtype == "bot_message" || message.bot_id) && message.blocks &&
+              message.blocks[0].block_id.start_with?(WARNING_BLOCK_ID_PREFIX)
+          end
 
         if warning_message
           message_sent_at = Time.new(warning_message.ts)

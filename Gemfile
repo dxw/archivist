@@ -7,9 +7,9 @@ gem "slack-ruby-client"
 
 group :development, :test do
   gem "byebug"
+  gem "prettier"
   gem "pry"
   gem "rake"
-  gem "standard"
 end
 
 group :test do

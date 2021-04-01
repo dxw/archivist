@@ -28,8 +28,7 @@ jobs:
         run: rake
 
       - name: Remove test dependencies
-        run:
-          bundle install --frozen --jobs 4 --retry 3 --without development test
+        run: bundle install --frozen --jobs 4 --retry 3 --without development test
 
       - name: Archive stale channels
         run: rake archivist:archive_channels

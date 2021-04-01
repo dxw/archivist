@@ -14,13 +14,10 @@ module Archivist
           # API parameters
           exclude_archived: true,
           types: "public_channel",
-
           # Client configuration
           sleep_interval: 2
         ) do |response|
-          new_channels = response.channels.map { |channel|
-            Channel.new(channel)
-          }
+          new_channels = response.channels.map { |channel| Channel.new(channel) }
 
           channels.concat(new_channels)
         end
@@ -45,10 +42,7 @@ module Archivist
       end
 
       def post_to_id(channel_id, blocks:)
-        slack_client.chat_postMessage(
-          channel: channel_id,
-          blocks: blocks
-        )
+        slack_client.chat_postMessage(channel: channel_id, blocks: blocks)
       end
 
       def last_messages_in(channel, limit: nil, min_days_ago: nil, max_days_ago: nil, &block)
@@ -59,7 +53,6 @@ module Archivist
           # Providing `latest` means the history is fetched most recent first.
           latest: min_days_ago.nil? ? Time.now.to_i : (Date.today - min_days_ago).to_time.to_i,
           oldest: max_days_ago && (Date.today - max_days_ago).to_time.to_i,
-
           # Client configuration
           sleep_interval: 1,
           &block

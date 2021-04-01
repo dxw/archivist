@@ -9,14 +9,13 @@ begin
 rescue LoadError
 end
 
-begin
-  require "standard/rake"
-rescue LoadError
-end
-
 require "archivist"
 
-task default: %i[spec standard]
+task default: %i[spec prettier]
+
+task :prettier do
+  exec("bundle exec rbprettier --write '**/*.*' Rakefile Gemfile")
+end
 
 namespace :archivist do
   task configure: :dotenv do

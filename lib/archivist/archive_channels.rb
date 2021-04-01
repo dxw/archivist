@@ -12,14 +12,16 @@ module Archivist
         type: "section",
         text: {
           type: "mrkdwn",
-          text: "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later."
+          text:
+            "If you're not ready for this channel to be archived, continue to use it (send a message) and I'll check again later."
         }
       },
       {
         type: "section",
         text: {
           type: "plain_text",
-          text: "If the rules are wrong or need updating, you might need to modify my configuration. Let my maintainers for your workspace know!"
+          text:
+            "If the rules are wrong or need updating, you might need to modify my configuration. Let my maintainers for your workspace know!"
         }
       }
     ].freeze
@@ -43,9 +45,7 @@ module Archivist
     private
 
     def leave_channels
-      channels = Client.list_public_channels.reject { |channel|
-        channel.monitored? || channel.report_target?
-      }
+      channels = Client.list_public_channels.reject { |channel| channel.monitored? || channel.report_target? }
 
       channels.each do |channel|
         next unless channel.member?
@@ -57,9 +57,7 @@ module Archivist
     end
 
     def join_channels
-      channels = Client.list_public_channels.select { |channel|
-        channel.monitored? || channel.report_target?
-      }
+      channels = Client.list_public_channels.select { |channel| channel.monitored? || channel.report_target? }
 
       channels.each do |channel|
         next if channel.member?
@@ -71,14 +69,11 @@ module Archivist
     end
 
     def warn_channels
-      channels = Client.list_public_channels.select { |channel|
-        channel.monitored? && channel.warnable?
-      }
+      channels = Client.list_public_channels.select { |channel| channel.monitored? && channel.warnable? }
 
       channels.each do |channel|
         blocks = WARNING_MESSAGE_BLOCKS.dup
-        blocks[0][:block_id] =
-          "#{Channel::WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
+        blocks[0][:block_id] = "#{Channel::WARNING_BLOCK_ID_PREFIX}-#{SecureRandom.uuid}"
 
         log.info("Warning ##{ENV["CI"] ? channel.id : channel.name}")
 
@@ -89,9 +84,7 @@ module Archivist
     end
 
     def archive_channels
-      channels = Client.list_public_channels.select { |channel|
-        channel.monitored? && channel.archivable?
-      }
+      channels = Client.list_public_channels.select { |channel| channel.monitored? && channel.archivable? }
 
       channels.each do |channel|
         log.info("Archiving ##{ENV["CI"] ? channel.id : channel.name}")
@@ -111,13 +104,7 @@ module Archivist
         Client.post_to_id(
           Config.report_channel_id,
           blocks: [
-            {
-              type: "section",
-              text: {
-                type: "plain_text",
-                text: "I have archived the following inactive channels:"
-              }
-            },
+            { type: "section", text: { type: "plain_text", text: "I have archived the following inactive channels:" } },
             {
               type: "section",
               text: {

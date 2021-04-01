@@ -10,8 +10,4 @@ ENV["ARCHIVIST_SLACK_API_TOKEN"] = "testtoken"
 
 Timecop.safe_mode = true
 
-RSpec.configure do |c|
-  c.before(:example) do
-    allow_any_instance_of(Logger).to receive(:info)
-  end
-end
+RSpec.configure { |c| c.before(:example) { allow_any_instance_of(Logger).to receive(:info) } }
